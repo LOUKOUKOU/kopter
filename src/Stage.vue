@@ -10,7 +10,7 @@
       >ACCELERATE</button>
       <button v-touch:start="() =>accelerateX(1)">ACCELERATE RIGHT</button>
       <p>Try accelerate the red square.</p>
-      <p>Gravity Speed: {{ -gravityYSpeed}}</p>
+      <p>Gravity Speed: {{ -Math.round(gravityYSpeed)}}</p>
       <p>Touch type: {{ touchType}}</p>
     </div>
   </main>
@@ -60,11 +60,12 @@ export default class Stage extends Vue {
     this.gravityXSpeed = this.gravityX
     this.curX += this.gravityXSpeed
     this.curY += this.gravityYSpeed
-    this.hitBottom()
+    this.hitBoundaries()
   }
 
-  private hitBottom() {
+  private hitBoundaries() {
     const rockbottom = this.canvas.height - this.height
+    // stop if hit bottom
     if (this.curY > rockbottom) {
       this.curY = rockbottom
       this.gravityYSpeed = 0
@@ -78,6 +79,11 @@ export default class Stage extends Vue {
         this.gravityXSpeed = 0
         this.gravityX = 0
       }
+    }
+    // Stop if hit roof
+    if (this.curY < 0) {
+      this.curY = 0
+      this.gravityYSpeed = 0
     }
   }
 
