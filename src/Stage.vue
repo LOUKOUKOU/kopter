@@ -2,10 +2,11 @@
   <main>
     <h1>kopter</h1>
     <canvas ref="canvas"></canvas>
-    <button @mousedown="accelerateX(-1)">ACCELERATE LEFT</button> 
-    <button @mousedown="accelerateY(-0.2)" @mouseup="accelerateY(0.1)">ACCELERATE</button> 
-    <button @mousedown="accelerateX(1)">ACCELERATE RIGHT</button> 
+    <button v-touch:start="() => accelerateX(-1)">ACCELERATE LEFT</button>
+    <button v-touch:start="() => accelerateY(-0.1)" v-touch:end="() => accelerateY(0.1)">ACCELERATE</button>
+    <button v-touch:start="() =>accelerateX(1)">ACCELERATE RIGHT</button>
     <p>Try accelerate the red square.</p>
+    <p>Gravity Speed: {{ -this.gravityYSpeed}}</p>
   </main>
 </template>
 
@@ -20,20 +21,18 @@ export default class App extends Vue {
   @Prop() private y!: number
   @Prop() private color!: string
 
-  private speedX: number = 0
-  private speedY: number = 0
   private curX: number = 0
   private curY: number = 0
   private gravityY: number = 0.05
   private gravityYSpeed: number = 0
   private gravityXSpeed: number = 0
-  private gravityX: number = 0.00
+  private gravityX: number = 0.0
   private interval: any = null
 
   private mounted() {
     this.curX = this.x
     this.curY = this.y
-    this.start();
+    this.start()
   }
 
   private update() {
@@ -45,26 +44,26 @@ export default class App extends Vue {
   private newPos() {
     this.gravityYSpeed += this.gravityY
     this.gravityXSpeed = this.gravityX
-    this.curX += this.speedX + this.gravityXSpeed
-    this.curY += this.speedY + this.gravityYSpeed
+    this.curX += this.gravityXSpeed
+    this.curY += this.gravityYSpeed
     this.hitBottom()
   }
 
   private hitBottom() {
     const rockbottom = this.canvas.height - this.height
     if (this.curY > rockbottom) {
-        this.curY = rockbottom
-        this.gravityYSpeed = 0
-        if (this.gravityXSpeed > 0) {
-          this.gravityXSpeed -= 0.02
-          this.gravityX -= 0.02
-        } else if (this.gravityXSpeed < 0) {
-          this.gravityXSpeed += 0.02
-          this.gravityX += 0.02
-        } else {
-          this.gravityXSpeed = 0
-          this.gravityX = 0
-        }
+      this.curY = rockbottom
+      this.gravityYSpeed = 0
+      if (this.gravityXSpeed > 0) {
+        this.gravityXSpeed -= 0.02
+        this.gravityX -= 0.02
+      } else if (this.gravityXSpeed < 0) {
+        this.gravityXSpeed += 0.02
+        this.gravityX += 0.02
+      } else {
+        this.gravityXSpeed = 0
+        this.gravityX = 0
+      }
     }
   }
 
@@ -103,23 +102,21 @@ export default class App extends Vue {
 </script>
 
 <style>
-  main {
-    user-select: none;
-  }
-  
-  @font-face {
-    font-family: 'army';
-    src: url(Army.ttf);
-  }
+main {
+  user-select: none;
+}
 
-  h1 {
-    font: 'army';
-  }
+@font-face {
+  font-family: 'army';
+  src: url(Army.ttf);
+}
 
-  canvas {
-    border:1px solid #d3d3d3;
-    background-color: #f1f1f1;
-  }
+h1 {
+  font: 'army';
+}
 
-  
+canvas {
+  border: 1px solid #d3d3d3;
+  background-color: #f1f1f1;
+}
 </style>
