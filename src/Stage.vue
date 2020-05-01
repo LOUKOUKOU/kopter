@@ -70,10 +70,10 @@ export default class Stage extends Vue {
     if (this.curY > rockbottom) {
       this.curY = rockbottom
       this.gravityYSpeed = 0
-      if (this.gravityXSpeed > 0.01) {
+      if (this.gravityXSpeed > 0.02) {
         this.gravityXSpeed -= 0.02
         this.gravityX -= 0.02
-      } else if (this.gravityXSpeed < -0.01) {
+      } else if (this.gravityXSpeed < -0.02) {
         this.gravityXSpeed += 0.02
         this.gravityX += 0.02
       } else {
@@ -92,10 +92,9 @@ export default class Stage extends Vue {
       this.curX = 0
       this.gravityXSpeed = 0
     }
-
     // stop if hit side walls
-    if (this.curX > this.canvas.width) {
-      this.curX = this.canvas.width
+    if (this.curX + this.width > this.canvas.width) {
+      this.curX = this.canvas.width - this.width
       this.gravityXSpeed = 0
     }
   }
