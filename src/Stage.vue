@@ -3,10 +3,14 @@
     <h1>kopter</h1>
     <canvas ref="canvas"></canvas>
     <button v-touch:start="() => accelerateX(-1)">ACCELERATE LEFT</button>
-    <button v-touch:start="() => accelerateY(-0.1)" v-touch:end="() => accelerateY(0.1)">ACCELERATE</button>
+    <button
+      v-touch:start="() => accelerateY(-0.1, 'start')"
+      v-touch:end="() => accelerateY(0.1, 'end')"
+    >ACCELERATE</button>
     <button v-touch:start="() =>accelerateX(1)">ACCELERATE RIGHT</button>
     <p>Try accelerate the red square.</p>
-    <p>Gravity Speed: {{ -this.gravityYSpeed}}</p>
+    <p>Gravity Speed: {{ -gravityYSpeed}}</p>
+    <p>Touch type: {{ touchType}}</p>
   </main>
 </template>
 
@@ -28,7 +32,7 @@ export default class App extends Vue {
   private gravityXSpeed: number = 0
   private gravityX: number = 0.0
   private interval: any = null
-
+  private touchType: string = ''
   private mounted() {
     this.curX = this.x
     this.curY = this.y
@@ -72,8 +76,9 @@ export default class App extends Vue {
     this.newPos()
     this.update()
   }
-  private accelerateY(n: number) {
+  private accelerateY(n: number, touchType: string) {
     this.gravityY = n
+    this.touchType = touchType
   }
   private accelerateX(n: number) {
     this.gravityX = this.gravityX + n
