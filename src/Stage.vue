@@ -47,6 +47,15 @@ export default class Stage extends Vue {
     height: 0
   }
 
+  private fuel = {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    total: 0,
+    current: 0
+  }
+
   private get canvas(): HTMLCanvasElement {
     return this.$refs.canvas as HTMLCanvasElement
   }
@@ -56,6 +65,7 @@ export default class Stage extends Vue {
     this.canvas.height = this.windowHeight
     document.body.insertBefore(this.canvas, document.body.childNodes[0])
     this.drawBoat()
+    this.drawFuel()
     this.interval = setInterval(this.updateGameArea, 20)
   }
 
@@ -68,6 +78,15 @@ export default class Stage extends Vue {
       width: this.width * 2,
       height: this.height / 2
     }
+
+    this.fuel = {
+      x: this.windowWidth / 10,
+      y: this.windowHeight / 10,
+      width: this.width * 4,
+      height: this.height / 4,
+      total: 100,
+      current: 100
+    }
     this.start()
   }
 
@@ -76,6 +95,7 @@ export default class Stage extends Vue {
     ctx.fillStyle = this.color
     ctx.fillRect(this.curX, this.curY, this.width, this.height)
     this.drawBoat()
+    this.drawFuel()
   }
 
   private newPos() {
@@ -145,6 +165,7 @@ export default class Stage extends Vue {
       this.curY = rockbottom
       this.gravityYSpeed = 0
       onSurface = true
+      this.gameOver = true
     } else {
       onSurface = false
     }
@@ -196,6 +217,12 @@ export default class Stage extends Vue {
     const ctx: any = this.canvas.getContext('2d')
     ctx.fillStyle = 'green'
     ctx.fillRect(this.boat.x, this.boat.y, this.boat.width, this.boat.height)
+  }
+
+  private drawFuel() {
+    const ctx: any = this.canvas.getContext('2d')
+    ctx.fillStyle = 'orange'
+    ctx.fillRect(this.fuel.x, this.fuel.y, this.fuel.width, this.fuel.height)
   }
 
   private stop() {
