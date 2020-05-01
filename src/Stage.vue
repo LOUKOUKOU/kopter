@@ -3,6 +3,7 @@
     <img ref="kopter" class="invis" :src="require('./assets/images/kopter.gif')" />
     <img ref="kopterBackward" class="invis" :src="require('./assets/images/kopter_backward.gif')" />
     <img ref="kopterForward" class="invis" :src="require('./assets/images/kopter_forward.gif')" />
+    <img class="flag" :src="flag" />
     <h2 v-if="gameOver === true" id="gameOver">GAME OVER</h2>
     <canvas ref="canvas"></canvas>
     <div id="dashboard">
@@ -41,7 +42,7 @@ export default class Stage extends Vue {
   @Prop() private color!: string
   @Prop({ default: 3 }) private maxSpeedX!: number
   @Prop({ default: 3 }) private maxSpeedY!: number
-  @Prop({ default: 0.02 }) private windSpeed!: number
+  @Prop({ default: 0 }) private windSpeed!: number
 
   private fps: number = 16
   private curX: number = 0
@@ -70,6 +71,23 @@ export default class Stage extends Vue {
 
   private get canvas(): HTMLCanvasElement {
     return this.$refs.canvas as HTMLCanvasElement
+  }
+
+  private get flag(): HTMLCanvasElement {
+    if (this.windSpeed >= 0.05) {
+      return require('./assets/images/flag_right_strong.png')
+    } else
+    if (this.windSpeed >= 0.02) {
+      return require('./assets/images/flag_right_weak.png')
+    } else
+    if (this.windSpeed <= -0.02) {
+      return require('./assets/images/flag_left_weak.png')
+    } else
+    if (this.windSpeed <= -0.05) {
+      return require('./assets/images/flag_left_strong.png')
+    } else {
+      return require('./assets/images/flag_still.png')
+    }
   }
 
   private start() {
@@ -198,7 +216,7 @@ export default class Stage extends Vue {
       } else {
         onSurface = false || onSurface
       }
-      
+
     }
     this.tapering(this.windSpeed, onSurface)
     // Stop if hit roof
@@ -409,5 +427,13 @@ button {
 
 button.exel {
   width: 60%;
+}
+
+.flag {
+  width: 40px;
+  height: 32px;
+  position: fixed;
+  top: 10px;
+  right: 20px;
 }
 </style>
