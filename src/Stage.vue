@@ -25,7 +25,8 @@
 
 <script lang="ts">
 import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
-
+import { entities } from './level1Entities'
+import Entity, { IEntity } from './Entity'
 @Component
 export default class Stage extends Vue {
   @Prop() private windowWidth!: number
@@ -48,15 +49,7 @@ export default class Stage extends Vue {
   private touchType: string = ''
   private direction: string = 'neutral'
   private gameOver = false
-
-  private windSpeed = -1
-
-  private boat = {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0
-  }
+  private entities: Entity[] = []
 
   private fuel = {
     x: 0,
@@ -75,7 +68,9 @@ export default class Stage extends Vue {
     this.canvas.width = this.windowWidth
     this.canvas.height = this.windowHeight
     document.body.insertBefore(this.canvas, document.body.childNodes[0])
-    this.drawBoat()
+    for (const entity of this.entities) {
+      this.drawEntity(entity)
+    }
     this.drawFuel()
     this.interval = setInterval(this.updateGameArea, 20)
   }
@@ -83,11 +78,17 @@ export default class Stage extends Vue {
   private mounted() {
     this.curX = this.x
     this.curY = this.y
-    this.boat = {
-      x: this.windowWidth / 2,
-      y: this.windowHeight - this.height * 4,
-      width: this.width * 2,
-      height: this.height * 4
+    for (const entity of entities) {
+      const theHeight = (entity.height / 100) * this.windowHeight
+      const data: IEntity = {
+        x: (entity.x / 100) * this.windowWidth,
+        y: (entity.y / 100) * this.windowHeight - theHeight,
+        width: (entity.width / 100) * this.windowWidth,
+        height: theHeight,
+        name: entity.name
+      }
+
+      this.entities.push(new Entity(data))
     }
 
     this.fuel = {
@@ -116,7 +117,9 @@ export default class Stage extends Vue {
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
     this.drawKopter()
-    this.drawBoat()
+    for (const entity of this.entities) {
+      this.drawEntity(entity)
+    }
     this.drawFuel()
   }
 
@@ -128,27 +131,31 @@ export default class Stage extends Vue {
     this.hitBoundaries()
   }
 
-  private isOnPlatform(curX: number, curY: number) {
-    const boatTop = this.boat.y - this.height
-    const boatLeft = this.boat.x
-    const boatRight = this.boat.x + this.boat.width
-    if (curY > boatTop && curX + this.width > boatLeft && curX < boatRight) {
+  private isOnPlatform(curX: number, curY: number, entity: IEntity) {
+    const entityTop = entity.y - this.height
+    const entityLeft = entity.x
+    const entityRight = entity.x + entity.width
+    if (
+      curY > entityTop &&
+      curX + this.width > entityLeft &&
+      curX < entityRight
+    ) {
       return true
     } else {
       // console.log(curX + this.width, boatLeft)
       if (
-        curY > boatTop &&
-        curX + this.width > boatLeft - 1 &&
-        curX + this.width < boatRight &&
+        curY > entityTop &&
+        curX + this.width > entityLeft - 1 &&
+        curX + this.width < entityRight &&
         this.gravityXSpeed > 0
       ) {
         console.log('crashed into left of platform')
         this.gameOver = true
       }
       if (
-        curY > boatTop &&
-        curX < boatRight + 1 &&
-        curX > boatLeft &&
+        curY > entityTop &&
+        curX < entityRight + 1 &&
+        curX > entityLeft &&
         this.gravityXSpeed < 0
       ) {
         console.log('crashed into right of platform')
@@ -158,38 +165,24 @@ export default class Stage extends Vue {
     }
   }
 
-  private platformSides(curX: number, curY: number) {
-    const boatTop = this.boat.y - this.height
-    const boatLeft = this.boat.x
-    const boatRight = this.boat.x + this.boat.width
-
-    if (
-      this.curX < boatLeft - 10 &&
-      this.curY < boatTop &&
-      this.curY > boatTop + this.height
-    ) {
-      return true
-    } else {
-      return false
-    }
-  }
-
   private hitBoundaries() {
     const rockbottom = this.canvas.height - this.height
 
     let onSurface = false
     // stop if hit bottom or platform surface
-    if (this.isOnPlatform(this.curX, this.curY)) {
-      this.curY = this.boat.y - this.height
-      this.gravityYSpeed = 0
-      onSurface = true
-    } else if (this.curY > rockbottom) {
-      this.curY = rockbottom
-      this.gravityYSpeed = 0
-      onSurface = true
-      this.gameOver = true
-    } else {
-      onSurface = false
+    for (const entity of this.entities) {
+      if (this.isOnPlatform(this.curX, this.curY, entity)) {
+        this.curY = entity.y - this.height
+        this.gravityYSpeed = 0
+        onSurface = true
+      } else if (this.curY > rockbottom) {
+        this.curY = rockbottom
+        this.gravityYSpeed = 0
+        onSurface = true
+        this.gameOver = true
+      } else {
+        onSurface = false
+      }
     }
 
     // Need to decide if accelaration is constant or tapers off
@@ -257,10 +250,10 @@ export default class Stage extends Vue {
     ctx.drawImage(img, this.curX, this.curY, this.width, this.height)
   }
 
-  private drawBoat() {
+  private drawEntity(entity: IEntity) {
     const ctx: any = this.canvas.getContext('2d')
     ctx.fillStyle = 'green'
-    ctx.fillRect(this.boat.x, this.boat.y, this.boat.width, this.boat.height)
+    ctx.fillRect(entity.x, entity.y, entity.width, entity.height)
   }
 
   private drawFuel() {
