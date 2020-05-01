@@ -27,6 +27,8 @@
 import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import { entities } from './level1Entities'
 import Entity, { IEntity } from './Entity'
+import IFuel from './IFuel'
+
 @Component
 export default class Stage extends Vue {
   @Prop() private windowWidth!: number
@@ -55,7 +57,9 @@ export default class Stage extends Vue {
   private gameOver = false
   private entities: Entity[] = []
 
-  private fuel = {
+  private drainFuel!: number
+
+  private fuel: IFuel = {
     x: 0,
     y: 0,
     width: 0,
@@ -95,13 +99,15 @@ export default class Stage extends Vue {
       this.entities.push(new Entity(data))
     }
 
+    const totalFuel = 100
+
     this.fuel = {
       x: this.windowWidth / 10,
       y: this.windowHeight / 10,
-      width: this.width * 4,
+      width: totalFuel * 2,
       height: this.height / 4,
-      total: 100,
-      current: 100
+      total: totalFuel,
+      current: totalFuel
     }
     this.start()
   }
@@ -242,7 +248,25 @@ export default class Stage extends Vue {
   }
 
   private accelerateY(n: number, touchType: string) {
-    this.gravityY = n
+    if (n > 0) {
+      this.gravityY = n
+      clearInterval(this.drainFuel)
+    } else {
+      if (this.fuel.current > 0) {
+        this.gravityY = n
+        this.drainFuel = setInterval(() => {
+          if (this.fuel.current > 0) {
+            this.fuel.current -= 10
+          } else {
+            console.log('OUT OF FUEL!')
+            this.gravityY = 0 - this.gravityY
+            clearInterval(this.drainFuel)
+          }
+        }, 200)
+      } else {
+        console.log('OUT OF FUEL!')
+      }
+    }
   }
 
   private accelerateX(n: number, type: string) {
@@ -284,7 +308,12 @@ export default class Stage extends Vue {
   private drawFuel() {
     const ctx: any = this.canvas.getContext('2d')
     ctx.fillStyle = 'orange'
-    ctx.fillRect(this.fuel.x, this.fuel.y, this.fuel.width, this.fuel.height)
+    ctx.fillRect(
+      this.fuel.x,
+      this.fuel.y,
+      this.fuel.current * 2,
+      this.fuel.height
+    )
   }
 
   private stop() {
