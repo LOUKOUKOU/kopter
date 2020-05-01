@@ -1,5 +1,8 @@
 <template>
   <main>
+    <img ref="kopter" class="invis" :src="require('./assets/images/kopter.gif')" />
+    <img ref="kopterBackward" class="invis" :src="require('./assets/images/kopter_backward.gif')" />
+    <img ref="kopterForward" class="invis" :src="require('./assets/images/kopter_forward.gif')" />
     <h1>kopter</h1>
     <h2 v-if="gameOver === true" id="gameOver">GAME OVER</h2>
     <canvas ref="canvas"></canvas>
@@ -38,7 +41,12 @@ export default class Stage extends Vue {
   private gravityXSpeed: number = 0
   private gravityX: number = 0.0
   private interval: any = null
+  private directionAnimationTimeout: any = null
+  private touchType: string = ''
+  private direction: string = 'neutral'
   private gameOver = false
+
+  private windSpeed = -1
 
   private boat = {
     x: 0,
@@ -74,9 +82,9 @@ export default class Stage extends Vue {
     this.curY = this.y
     this.boat = {
       x: this.windowWidth / 2,
-      y: this.windowHeight - this.height / 2,
+      y: this.windowHeight - this.height * 4,
       width: this.width * 2,
-      height: this.height / 2
+      height: this.height * 4
     }
 
     this.fuel = {
@@ -92,8 +100,19 @@ export default class Stage extends Vue {
 
   private update() {
     const ctx: any = this.canvas.getContext('2d')
-    ctx.fillStyle = this.color
-    ctx.fillRect(this.curX, this.curY, this.width, this.height)
+    // ctx.fillStyle = this.color
+    // ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+
+    const grd = ctx.createLinearGradient(0, this.canvas.height, 0, 0)
+    grd.addColorStop(0, '#d47d48')
+    grd.addColorStop(0.3, '#ddd')
+    grd.addColorStop(1, '#7e94ae')
+
+    // Fill with gradient
+    ctx.fillStyle = grd
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+
+    this.drawKopter()
     this.drawBoat()
     this.drawFuel()
   }
@@ -169,18 +188,20 @@ export default class Stage extends Vue {
     } else {
       onSurface = false
     }
-    if (onSurface === true) {
-      if (this.gravityXSpeed > 0.02) {
-        this.gravityXSpeed -= 0.02
-        this.gravityX -= 0.02
-      } else if (this.gravityXSpeed < -0.02) {
-        this.gravityXSpeed += 0.02
-        this.gravityX += 0.02
-      } else {
-        this.gravityXSpeed = 0
-        this.gravityX = 0
-      }
+
+    // Need to decide if accelaration is constant or tapers off
+    // if (onSurface === true) {
+    if (this.gravityXSpeed > 0.02) {
+      this.gravityXSpeed -= 0.02
+      this.gravityX -= 0.02
+    } else if (this.gravityXSpeed < -0.02) {
+      this.gravityXSpeed += 0.02
+      this.gravityX += 0.02
+    } else {
+      this.gravityXSpeed = 0
+      this.gravityX = 0
     }
+    // }
     // Stop if hit roof
     if (this.curY < 0) {
       this.curY = 0
@@ -209,8 +230,28 @@ export default class Stage extends Vue {
   private accelerateY(n: number, touchType: string) {
     this.gravityY = n
   }
-  private accelerateX(n: number) {
+  private accelerateX(n: number, type: string) {
     this.gravityX = this.gravityX + n
+    this.direction = type
+    this.directionAnimationTimeout = setTimeout(() => {
+      this.direction = 'neutral'
+      clearTimeout(this.directionAnimationTimeout)
+    }, 500)
+  }
+
+  private drawKopter() {
+    const ctx: any = this.canvas.getContext('2d')
+
+    let img: HTMLImageElement
+    if (this.direction === 'right') {
+      img = this.$refs.kopterForward as HTMLImageElement
+    } else if (this.direction === 'left') {
+      img = this.$refs.kopterBackward as HTMLImageElement
+    } else {
+      img = this.$refs.kopter as HTMLImageElement
+    }
+
+    ctx.drawImage(img, this.curX, this.curY, this.width, this.height)
   }
 
   private drawBoat() {
@@ -242,6 +283,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  background: #000;
 }
 main {
   user-select: none;
@@ -277,6 +319,11 @@ h1 {
 
 canvas {
   background-color: #f1f1f1;
+}
+
+.invis {
+  position: absolute;
+  left: -5000px;
 }
 
 #dashboard {

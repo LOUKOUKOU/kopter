@@ -5,11 +5,11 @@
       v-else
       :windowWidth="windowWidth"
       :windowHeight="windowHeight"
-      :width="windowWidth / 20"
-      :height="windowWidth / 20"
-      color="red"
-      :x="100"
-      :y="100"
+      :width="windowWidth / 15"
+      :height="windowHeight / 15"
+      color="#1bffe3"
+      :x="this.windowWidth / 2"
+      :y="this.windowHeight"
     ></stage>
   </div>
 </template>
