@@ -3,7 +3,6 @@
     <img ref="kopter" class="invis" :src="require('./assets/images/kopter.gif')" />
     <img ref="kopterBackward" class="invis" :src="require('./assets/images/kopter_backward.gif')" />
     <img ref="kopterForward" class="invis" :src="require('./assets/images/kopter_forward.gif')" />
-    <h1>kopter</h1>
     <h2 v-if="gameOver === true" id="gameOver">GAME OVER</h2>
     <canvas ref="canvas"></canvas>
     <div id="dashboard">
@@ -11,11 +10,15 @@
       <button
         v-touch:start="() => accelerateY(-0.1, 'start')"
         v-touch:end="() => accelerateY(0.1, 'end')"
+        class="exel"
       >ACCELERATE</button>
       <button v-touch:start="() =>accelerateX(1, 'right')">ACCELERATE RIGHT</button>
+    </div>
+    <div class="debug">
       <p>Try accelerate the red square.</p>
       <p>Vertical Speed: {{ -Math.round(gravityYSpeed)}}</p>
       <p>Horizontal Speed: {{ Math.round(gravityXSpeed)}}</p>
+      <p>Game Over: {{ gameOver === true }}</p>
     </div>
   </main>
 </template>
@@ -321,6 +324,22 @@ canvas {
   background-color: #f1f1f1;
 }
 
+.debug {
+  position: fixed;
+  top: 0;
+  left: 20px;
+  pointer-events: none;
+}
+
+.debug p {
+  font-size: 10px;
+  line-height: 1;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
 .invis {
   position: absolute;
   left: -5000px;
@@ -328,7 +347,20 @@ canvas {
 
 #dashboard {
   position: fixed;
-  bottom: 1rem;
-  left: 1rem;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+}
+button {
+  opacity: 0;
+  width: 20%;
+}
+
+button.exel {
+  width: 60%;
 }
 </style>
