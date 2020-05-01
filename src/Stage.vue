@@ -40,13 +40,34 @@ export default class Stage extends Vue {
   private interval: any = null
   private touchType: string = ''
 
+  private boat = {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
+  }
+
   private get canvas(): HTMLCanvasElement {
     return this.$refs.canvas as HTMLCanvasElement
+  }
+
+  private start() {
+    this.canvas.width = this.windowWidth
+    this.canvas.height = this.windowHeight
+    document.body.insertBefore(this.canvas, document.body.childNodes[0])
+    this.drawBoat()
+    this.interval = setInterval(this.updateGameArea, 20)
   }
 
   private mounted() {
     this.curX = this.x
     this.curY = this.y
+    this.boat = {
+      x: this.windowWidth / 2,
+      y: this.windowHeight - this.height / 2,
+      width: this.width * 2,
+      height: this.height / 2
+    }
     this.start()
   }
 
@@ -54,6 +75,7 @@ export default class Stage extends Vue {
     const ctx: any = this.canvas.getContext('2d')
     ctx.fillStyle = this.color
     ctx.fillRect(this.curX, this.curY, this.width, this.height)
+    this.drawBoat()
   }
 
   private newPos() {
@@ -64,10 +86,29 @@ export default class Stage extends Vue {
     this.hitBoundaries()
   }
 
+  private platformTop(curX: number, curY: number) {
+    const boatTop = this.boat.y - this.height
+    const boatLeft = this.boat.x
+    const boatRight = this.boat.x + this.boat.width
+    if (
+      curY > boatTop &&
+      curX + this.width / 2 > boatLeft &&
+      curX + this.width / 2 < boatRight
+    ) {
+      return true
+    } else {
+      return false
+    }
+  }
+
   private hitBoundaries() {
     const rockbottom = this.canvas.height - this.height
+
     // stop if hit bottom
-    if (this.curY > rockbottom) {
+    if (this.platformTop(this.curX, this.curY)) {
+      this.curY = this.boat.y - this.height
+      this.gravityYSpeed = 0
+    } else if (this.curY > rockbottom) {
       this.curY = rockbottom
       this.gravityYSpeed = 0
       if (this.gravityXSpeed > 0.02) {
@@ -112,11 +153,10 @@ export default class Stage extends Vue {
     this.gravityX = this.gravityX + n
   }
 
-  private start() {
-    this.canvas.width = this.windowWidth
-    this.canvas.height = this.windowHeight
-    document.body.insertBefore(this.canvas, document.body.childNodes[0])
-    this.interval = setInterval(this.updateGameArea, 20)
+  private drawBoat() {
+    const ctx: any = this.canvas.getContext('2d')
+    ctx.fillStyle = 'green'
+    ctx.fillRect(this.boat.x, this.boat.y, this.boat.width, this.boat.height)
   }
 
   private stop() {

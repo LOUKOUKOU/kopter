@@ -8,8 +8,8 @@
       :width="windowWidth / 20"
       :height="windowWidth / 20"
       color="red"
-      :x="1400"
-      :y="75"
+      :x="windowWidth / 2"
+      :y="400"
     ></stage>
   </div>
 </template>
