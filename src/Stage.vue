@@ -1,9 +1,13 @@
 <template>
   <main>
+    <img ref="kopter" class="invis" :src="require('./assets/images/kopter.gif')">
+    <img ref="kopterBackward" class="invis" :src="require('./assets/images/kopter_backward.gif')">
+    <img ref="kopterForward" class="invis" :src="require('./assets/images/kopter_forward.gif')">
     <h1>kopter</h1>
     <canvas ref="canvas"></canvas>
     <div id="dashboard">
-      <button v-touch:start="() => accelerateX(-1, 'left')">ACCELERATE LEFT</button>
+      <button 
+      v-touch:start="() => accelerateX(-1, 'left')">ACCELERATE LEFT</button>
       <button
         v-touch:start="() => accelerateY(-0.1, 'start')"
         v-touch:end="() => accelerateY(0.1, 'end')"
@@ -38,7 +42,9 @@ export default class Stage extends Vue {
   private gravityXSpeed: number = 0
   private gravityX: number = 0.0
   private interval: any = null
+  private directionAnimationTimeout: any = null
   private touchType: string = ''
+  private direction: string = 'neutral'
 
   private get canvas(): HTMLCanvasElement {
     return this.$refs.canvas as HTMLCanvasElement
@@ -52,8 +58,30 @@ export default class Stage extends Vue {
 
   private update() {
     const ctx: any = this.canvas.getContext('2d')
-    ctx.fillStyle = this.color
-    ctx.fillRect(this.curX, this.curY, this.width, this.height)
+    // ctx.fillStyle = this.color
+    // ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+
+    const grd = ctx.createLinearGradient(0, this.canvas.height, 0, 0)
+    grd.addColorStop(0, '#d47d48')
+    grd.addColorStop(0.3, '#ddd')
+    grd.addColorStop(1, '#7e94ae')
+
+    // Fill with gradient
+    ctx.fillStyle = grd
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+
+    let img: HTMLImageElement
+    if (this.direction === 'right') {
+      img = this.$refs.kopterForward as HTMLImageElement
+    } else
+    if (this.direction === 'left') {
+      img = this.$refs.kopterBackward as HTMLImageElement
+    } else {
+      img = this.$refs.kopter as HTMLImageElement
+    }
+
+    ctx.drawImage(img, this.curX, this.curY, this.width, this.height);
+
   }
 
   private newPos() {
@@ -108,8 +136,16 @@ export default class Stage extends Vue {
     this.gravityY = n
     this.touchType = touchType
   }
-  private accelerateX(n: number) {
+  private accelerateX(n: number, type: string) {
     this.gravityX = this.gravityX + n
+    this.direction = type
+    this.directionAnimationTimeout =
+    setTimeout(() => {
+      this.direction = 'neutral'
+      clearTimeout(this.directionAnimationTimeout)
+      },
+      500
+    )
   }
 
   private start() {
@@ -136,6 +172,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  background: #000;
 }
 main {
   user-select: none;
@@ -156,6 +193,11 @@ h1 {
 
 canvas {
   background-color: #f1f1f1;
+}
+
+.invis {
+  position: absolute;
+  left: -5000px;
 }
 
 #dashboard {

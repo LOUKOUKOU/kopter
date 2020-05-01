@@ -5,9 +5,9 @@
       v-else
       :windowWidth="windowWidth"
       :windowHeight="windowHeight"
-      :width="windowWidth / 20"
-      :height="windowWidth / 20"
-      color="red"
+      :width="windowWidth / 30"
+      :height="windowHeight / 15"
+      color="#1bffe3"
       :x="1400"
       :y="75"
     ></stage>
