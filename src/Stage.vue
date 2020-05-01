@@ -1,28 +1,18 @@
 <template>
   <main>
-    <img ref="kopter" class="invis" :src="require('./assets/images/kopter.gif')">
-    <img ref="kopterBackward" class="invis" :src="require('./assets/images/kopter_backward.gif')">
-    <img ref="kopterForward" class="invis" :src="require('./assets/images/kopter_forward.gif')">
+    <img ref="kopter" class="invis" :src="require('./assets/images/kopter.gif')" />
+    <img ref="kopterBackward" class="invis" :src="require('./assets/images/kopter_backward.gif')" />
+    <img ref="kopterForward" class="invis" :src="require('./assets/images/kopter_forward.gif')" />
     <h2 v-if="gameOver === true" id="gameOver">GAME OVER</h2>
     <canvas ref="canvas"></canvas>
     <div id="dashboard">
-      <button 
-        v-touch:start="() => accelerateX(-1, 'left')"
-      >
-        ACCELERATE LEFT
-      </button>
+      <button v-touch:start="() => accelerateX(-1, 'left')">ACCELERATE LEFT</button>
       <button
         v-touch:start="() => accelerateY(-0.1, 'start')"
         v-touch:end="() => accelerateY(0.1, 'end')"
         class="exel"
-      >
-        ACCELERATE
-      </button>
-      <button 
-        v-touch:start="() =>accelerateX(1, 'right')"
-      >
-        ACCELERATE RIGHT
-      </button>
+      >ACCELERATE</button>
+      <button v-touch:start="() =>accelerateX(1, 'right')">ACCELERATE RIGHT</button>
     </div>
     <div class="debug">
       <p>Try accelerate the red square.</p>
@@ -59,11 +49,22 @@ export default class Stage extends Vue {
   private direction: string = 'neutral'
   private gameOver = false
 
+  private windSpeed = -1
+
   private boat = {
     x: 0,
     y: 0,
     width: 0,
     height: 0
+  }
+
+  private fuel = {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    total: 0,
+    current: 0
   }
 
   private get canvas(): HTMLCanvasElement {
@@ -75,6 +76,7 @@ export default class Stage extends Vue {
     this.canvas.height = this.windowHeight
     document.body.insertBefore(this.canvas, document.body.childNodes[0])
     this.drawBoat()
+    this.drawFuel()
     this.interval = setInterval(this.updateGameArea, 20)
   }
 
@@ -83,9 +85,18 @@ export default class Stage extends Vue {
     this.curY = this.y
     this.boat = {
       x: this.windowWidth / 2,
-      y: this.windowHeight - this.height / 2,
+      y: this.windowHeight - this.height * 4,
       width: this.width * 2,
-      height: this.height / 2
+      height: this.height * 4
+    }
+
+    this.fuel = {
+      x: this.windowWidth / 10,
+      y: this.windowHeight / 10,
+      width: this.width * 4,
+      height: this.height / 4,
+      total: 100,
+      current: 100
     }
     this.start()
   }
@@ -106,6 +117,7 @@ export default class Stage extends Vue {
 
     this.drawKopter()
     this.drawBoat()
+    this.drawFuel()
   }
 
   private newPos() {
@@ -179,18 +191,20 @@ export default class Stage extends Vue {
     } else {
       onSurface = false
     }
-    if (onSurface === true) {
-      if (this.gravityXSpeed > 0.02) {
-        this.gravityXSpeed -= 0.02
-        this.gravityX -= 0.02
-      } else if (this.gravityXSpeed < -0.02) {
-        this.gravityXSpeed += 0.02
-        this.gravityX += 0.02
-      } else {
-        this.gravityXSpeed = 0
-        this.gravityX = 0
-      }
+
+    // Need to decide if accelaration is constant or tapers off
+    // if (onSurface === true) {
+    if (this.gravityXSpeed > 0.02) {
+      this.gravityXSpeed -= 0.02
+      this.gravityX -= 0.02
+    } else if (this.gravityXSpeed < -0.02) {
+      this.gravityXSpeed += 0.02
+      this.gravityX += 0.02
+    } else {
+      this.gravityXSpeed = 0
+      this.gravityX = 0
     }
+    // }
     // Stop if hit roof
     if (this.curY < 0) {
       this.curY = 0
@@ -222,13 +236,10 @@ export default class Stage extends Vue {
   private accelerateX(n: number, type: string) {
     this.gravityX = this.gravityX + n
     this.direction = type
-    this.directionAnimationTimeout =
-    setTimeout(() => {
+    this.directionAnimationTimeout = setTimeout(() => {
       this.direction = 'neutral'
       clearTimeout(this.directionAnimationTimeout)
-      },
-      500
-    )
+    }, 500)
   }
 
   private drawKopter() {
@@ -237,20 +248,25 @@ export default class Stage extends Vue {
     let img: HTMLImageElement
     if (this.direction === 'right') {
       img = this.$refs.kopterForward as HTMLImageElement
-    } else
-    if (this.direction === 'left') {
+    } else if (this.direction === 'left') {
       img = this.$refs.kopterBackward as HTMLImageElement
     } else {
       img = this.$refs.kopter as HTMLImageElement
     }
 
-    ctx.drawImage(img, this.curX, this.curY, this.width, this.height);
+    ctx.drawImage(img, this.curX, this.curY, this.width, this.height)
   }
 
   private drawBoat() {
     const ctx: any = this.canvas.getContext('2d')
     ctx.fillStyle = 'green'
     ctx.fillRect(this.boat.x, this.boat.y, this.boat.width, this.boat.height)
+  }
+
+  private drawFuel() {
+    const ctx: any = this.canvas.getContext('2d')
+    ctx.fillStyle = 'orange'
+    ctx.fillRect(this.fuel.x, this.fuel.y, this.fuel.width, this.fuel.height)
   }
 
   private stop() {
