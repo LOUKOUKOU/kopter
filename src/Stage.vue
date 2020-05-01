@@ -16,8 +16,8 @@
     </div>
     <div class="debug">
       <p>Try accelerate the red square.</p>
-      <p>Vertical Speed: {{ -Math.round(gravityYSpeed)}}</p>
-      <p>Horizontal Speed: {{ Math.round(gravityXSpeed)}}</p>
+      <p>Vertical Speed: {{ -Math.round(YSpeed)}}</p>
+      <p>Horizontal Speed: {{ Math.round(XSpeed)}}</p>
       <p>Game Over: {{ gameOver === true }}</p>
     </div>
   </main>
@@ -36,20 +36,22 @@ export default class Stage extends Vue {
   @Prop() private x!: number
   @Prop() private y!: number
   @Prop() private color!: string
+  @Prop({default: 3}) private maxSpeedX!: number
+  @Prop({default: 3}) private maxSpeedY!: number
+  @Prop({default: -0.00}) private windSpeed!: number
 
+  private fps: number = 16
   private curX: number = 0
   private curY: number = 0
   private gravityY: number = 0.05
-  private gravityYSpeed: number = 0
-  private gravityXSpeed: number = 0
+  private YSpeed: number = 0
+  private XSpeed: number = 0
   private gravityX: number = 0.0
   private interval: any = null
   private directionAnimationTimeout: any = null
   private touchType: string = ''
   private direction: string = 'neutral'
   private gameOver = false
-
-  private windSpeed = -1
 
   private boat = {
     x: 0,
@@ -77,7 +79,7 @@ export default class Stage extends Vue {
     document.body.insertBefore(this.canvas, document.body.childNodes[0])
     this.drawBoat()
     this.drawFuel()
-    this.interval = setInterval(this.updateGameArea, 20)
+    this.interval = setInterval(this.updateGameArea, this.fps)
   }
 
   private mounted() {
@@ -121,10 +123,13 @@ export default class Stage extends Vue {
   }
 
   private newPos() {
-    this.gravityYSpeed += this.gravityY
-    this.gravityXSpeed = this.gravityX
-    this.curX += this.gravityXSpeed
-    this.curY += this.gravityYSpeed
+    if (this.YSpeed + this.gravityY <= this.maxSpeedY 
+    && this.YSpeed + this.gravityY >= -this.maxSpeedY) {
+      this.YSpeed += this.gravityY
+    }
+    this.XSpeed = this.gravityX
+    this.curX += this.XSpeed
+    this.curY += this.YSpeed
     this.hitBoundaries()
   }
 
@@ -140,7 +145,7 @@ export default class Stage extends Vue {
         curY > boatTop &&
         curX + this.width > boatLeft - 1 &&
         curX + this.width < boatRight &&
-        this.gravityXSpeed > 0
+        this.XSpeed > 0
       ) {
         console.log('crashed into left of platform')
         this.gameOver = true
@@ -149,7 +154,7 @@ export default class Stage extends Vue {
         curY > boatTop &&
         curX < boatRight + 1 &&
         curX > boatLeft &&
-        this.gravityXSpeed < 0
+        this.XSpeed < 0
       ) {
         console.log('crashed into right of platform')
         this.gameOver = true
@@ -177,52 +182,62 @@ export default class Stage extends Vue {
   private hitBoundaries() {
     const rockbottom = this.canvas.height - this.height
 
-    let onSurface = false
+    let onSurface:boolean = false
     // stop if hit bottom or platform surface
     if (this.isOnPlatform(this.curX, this.curY)) {
       this.curY = this.boat.y - this.height
-      this.gravityYSpeed = 0
+      this.YSpeed = 0
       onSurface = true
     } else if (this.curY > rockbottom) {
       this.curY = rockbottom
-      this.gravityYSpeed = 0
+      this.YSpeed = 0
       onSurface = true
       this.gameOver = true
     } else {
       onSurface = false
     }
 
-    // Need to decide if accelaration is constant or tapers off
-    // if (onSurface === true) {
-    if (this.gravityXSpeed > 0.02) {
-      this.gravityXSpeed -= 0.02
-      this.gravityX -= 0.02
-    } else if (this.gravityXSpeed < -0.02) {
-      this.gravityXSpeed += 0.02
-      this.gravityX += 0.02
-    } else {
-      this.gravityXSpeed = 0
-      this.gravityX = 0
-    }
-    // }
+    this.tapering(this.windSpeed, onSurface)
     // Stop if hit roof
     if (this.curY < 0) {
       this.curY = 0
-      this.gravityYSpeed = 0
+      this.YSpeed = 0
     }
 
     // stop if hit side walls
     if (this.curX < 0) {
       this.curX = 0
-      this.gravityXSpeed = 0
+      this.XSpeed = 0
       this.gravityX = 0
     }
     // stop if hit side walls
     if (this.curX + this.width > this.canvas.width) {
       this.curX = this.canvas.width - this.width
-      this.gravityXSpeed = 0
+      this.XSpeed = 0
       this.gravityX = 0
     }
+  }
+  
+  private tapering(resistance: number = 0.02, onSurface?: boolean) {
+    if (onSurface === false) {
+      if (this.XSpeed <= this.maxSpeedX && this.XSpeed >= -this.maxSpeedX) {
+        this.XSpeed += resistance
+        this.gravityX += resistance
+      }
+    }
+    // Need to decide if accelaration is constant or tapers off
+    // if (onSurface === true) {
+    // if (this.XSpeed > 0.02) {
+    //   this.XSpeed -= resistance
+    //   this.gravityX -= resistance
+    // } else if (this.XSpeed < -0.02) {
+    //   this.XSpeed += resistance
+    //   this.gravityX += resistance
+    // } else {
+    //   this.XSpeed = 0
+    //   this.gravityX = 0
+    // }
+    // }
   }
 
   private updateGameArea() {
@@ -230,11 +245,16 @@ export default class Stage extends Vue {
     this.newPos()
     this.update()
   }
+
   private accelerateY(n: number, touchType: string) {
     this.gravityY = n
   }
+
   private accelerateX(n: number, type: string) {
-    this.gravityX = this.gravityX + n
+    if (this.gravityX + n <= this.maxSpeedX && this.gravityX + n >= -this.maxSpeedX) {
+      this.gravityX = this.gravityX + n
+    }
+
     this.direction = type
     this.directionAnimationTimeout = setTimeout(() => {
       this.direction = 'neutral'
