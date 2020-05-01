@@ -5,7 +5,7 @@
       v-else
       :windowWidth="windowWidth"
       :windowHeight="windowHeight"
-      :width="windowWidth / 15"
+      :width="windowWidth / 30"
       :height="windowHeight / 15"
       color="#1bffe3"
       :x="this.windowWidth / 2"
