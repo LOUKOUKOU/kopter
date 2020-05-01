@@ -8,7 +8,7 @@
       :width="windowWidth / 20"
       :height="windowWidth / 20"
       color="red"
-      :x="80"
+      :x="1400"
       :y="75"
     ></stage>
   </div>
@@ -27,7 +27,7 @@ export default class App extends Vue {
   private windowWidth: number = 0
   private windowHeight: number = 0
 
-  mounted() {
+  private mounted() {
     this.windowWidth = window.innerWidth - 16
     this.windowHeight = window.innerHeight - 16
   }

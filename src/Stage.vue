@@ -3,14 +3,15 @@
     <h1>kopter</h1>
     <canvas ref="canvas"></canvas>
     <div id="dashboard">
-      <button v-touch:start="() => accelerateX(-1)">ACCELERATE LEFT</button>
+      <button v-touch:start="() => accelerateX(-1, 'left')">ACCELERATE LEFT</button>
       <button
         v-touch:start="() => accelerateY(-0.1, 'start')"
         v-touch:end="() => accelerateY(0.1, 'end')"
       >ACCELERATE</button>
-      <button v-touch:start="() =>accelerateX(1)">ACCELERATE RIGHT</button>
+      <button v-touch:start="() =>accelerateX(1, 'right')">ACCELERATE RIGHT</button>
       <p>Try accelerate the red square.</p>
-      <p>Gravity Speed: {{ -Math.round(gravityYSpeed)}}</p>
+      <p>Vertical Speed: {{ -Math.round(gravityYSpeed)}}</p>
+      <p>Horizontal Speed: {{ Math.round(gravityXSpeed)}}</p>
       <p>Touch type: {{ touchType}}</p>
     </div>
   </main>
@@ -69,10 +70,10 @@ export default class Stage extends Vue {
     if (this.curY > rockbottom) {
       this.curY = rockbottom
       this.gravityYSpeed = 0
-      if (this.gravityXSpeed > 0) {
+      if (this.gravityXSpeed > 0.01) {
         this.gravityXSpeed -= 0.02
         this.gravityX -= 0.02
-      } else if (this.gravityXSpeed < 0) {
+      } else if (this.gravityXSpeed < -0.01) {
         this.gravityXSpeed += 0.02
         this.gravityX += 0.02
       } else {
@@ -84,6 +85,18 @@ export default class Stage extends Vue {
     if (this.curY < 0) {
       this.curY = 0
       this.gravityYSpeed = 0
+    }
+
+    // stop if hit side walls
+    if (this.curX < 0) {
+      this.curX = 0
+      this.gravityXSpeed = 0
+    }
+
+    // stop if hit side walls
+    if (this.curX > this.canvas.width) {
+      this.curX = this.canvas.width
+      this.gravityXSpeed = 0
     }
   }
 
