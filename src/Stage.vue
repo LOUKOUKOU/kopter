@@ -39,7 +39,7 @@ export default class Stage extends Vue {
   @Prop() private color!: string
   @Prop({ default: 3 }) private maxSpeedX!: number
   @Prop({ default: 3 }) private maxSpeedY!: number
-  @Prop({ default: -0.0 }) private windSpeed!: number
+  @Prop({ default: 0.02 }) private windSpeed!: number
 
   private fps: number = 16
   private curX: number = 0
@@ -183,17 +183,17 @@ export default class Stage extends Vue {
       if (this.isOnPlatform(this.curX, this.curY, entity)) {
         this.curY = entity.y - this.height
         this.YSpeed = 0
-        onSurface = true
+        onSurface = true || onSurface
       } else if (this.curY > rockbottom) {
         this.curY = rockbottom
         this.YSpeed = 0
-        onSurface = true
+        onSurface = true || onSurface
         this.gameOver = true
       } else {
-        onSurface = false
+        onSurface = false || onSurface
       }
+      
     }
-
     this.tapering(this.windSpeed, onSurface)
     // Stop if hit roof
     if (this.curY < 0) {
@@ -215,26 +215,24 @@ export default class Stage extends Vue {
     }
   }
 
-  private tapering(resistance: number = 0.02, onSurface?: boolean) {
+  private tapering(resistance: number = 0.02, onSurface: boolean) {
+    if (this.XSpeed > 0.02) {
+      this.XSpeed -= 0.02
+      this.gravityX -= 0.02
+    } else if (this.XSpeed < -0.02) {
+      this.XSpeed += 0.02
+      this.gravityX += 0.02
+    } else {
+      this.XSpeed = 0
+      this.gravityX = 0
+    }
+
     if (onSurface === false) {
       if (this.XSpeed <= this.maxSpeedX && this.XSpeed >= -this.maxSpeedX) {
         this.XSpeed += resistance
         this.gravityX += resistance
       }
     }
-    // Need to decide if accelaration is constant or tapers off
-    // if (onSurface === true) {
-    // if (this.XSpeed > 0.02) {
-    //   this.XSpeed -= resistance
-    //   this.gravityX -= resistance
-    // } else if (this.XSpeed < -0.02) {
-    //   this.XSpeed += resistance
-    //   this.gravityX += resistance
-    // } else {
-    //   this.XSpeed = 0
-    //   this.gravityX = 0
-    // }
-    // }
   }
 
   private updateGameArea() {
