@@ -2,15 +2,17 @@
   <main>
     <h1>kopter</h1>
     <canvas ref="canvas"></canvas>
-    <button v-touch:start="() => accelerateX(-1)">ACCELERATE LEFT</button>
-    <button
-      v-touch:start="() => accelerateY(-0.1, 'start')"
-      v-touch:end="() => accelerateY(0.1, 'end')"
-    >ACCELERATE</button>
-    <button v-touch:start="() =>accelerateX(1)">ACCELERATE RIGHT</button>
-    <p>Try accelerate the red square.</p>
-    <p>Gravity Speed: {{ -gravityYSpeed}}</p>
-    <p>Touch type: {{ touchType}}</p>
+    <div id="dashboard">
+      <button v-touch:start="() => accelerateX(-1)">ACCELERATE LEFT</button>
+      <button
+        v-touch:start="() => accelerateY(-0.1, 'start')"
+        v-touch:end="() => accelerateY(0.1, 'end')"
+      >ACCELERATE</button>
+      <button v-touch:start="() =>accelerateX(1)">ACCELERATE RIGHT</button>
+      <p>Try accelerate the red square.</p>
+      <p>Gravity Speed: {{ -gravityYSpeed}}</p>
+      <p>Touch type: {{ touchType}}</p>
+    </div>
   </main>
 </template>
 
@@ -18,7 +20,10 @@
 import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 
 @Component
-export default class App extends Vue {
+export default class Stage extends Vue {
+  @Prop() private windowWidth!: number
+  @Prop() private windowHeight!: number
+
   @Prop() private width!: number
   @Prop() private height!: number
   @Prop() private x!: number
@@ -33,6 +38,11 @@ export default class App extends Vue {
   private gravityX: number = 0.0
   private interval: any = null
   private touchType: string = ''
+
+  private get canvas(): HTMLCanvasElement {
+    return this.$refs.canvas as HTMLCanvasElement
+  }
+
   private mounted() {
     this.curX = this.x
     this.curY = this.y
@@ -85,8 +95,8 @@ export default class App extends Vue {
   }
 
   private start() {
-    this.canvas.width = 480
-    this.canvas.height = 270
+    this.canvas.width = this.windowWidth
+    this.canvas.height = this.windowHeight
     document.body.insertBefore(this.canvas, document.body.childNodes[0])
     this.interval = setInterval(this.updateGameArea, 20)
   }
@@ -99,16 +109,19 @@ export default class App extends Vue {
     const ctx: any = this.canvas.getContext('2d')
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
   }
-
-  private get canvas(): HTMLCanvasElement {
-    return this.$refs.canvas as HTMLCanvasElement
-  }
 }
 </script>
 
 <style>
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 main {
   user-select: none;
+  margin: 0 auto;
 }
 
 @font-face {
@@ -118,10 +131,18 @@ main {
 
 h1 {
   font: 'army';
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
 }
 
 canvas {
-  border: 1px solid #d3d3d3;
   background-color: #f1f1f1;
+}
+
+#dashboard {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
 }
 </style>
