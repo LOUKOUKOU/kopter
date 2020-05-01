@@ -1,6 +1,7 @@
 <template>
   <main>
     <h1>kopter</h1>
+    <h2 v-if="gameOver === true" id="gameOver">GAME OVER</h2>
     <canvas ref="canvas"></canvas>
     <div id="dashboard">
       <button v-touch:start="() => accelerateX(-1, 'left')">ACCELERATE LEFT</button>
@@ -12,7 +13,6 @@
       <p>Try accelerate the red square.</p>
       <p>Vertical Speed: {{ -Math.round(gravityYSpeed)}}</p>
       <p>Horizontal Speed: {{ Math.round(gravityXSpeed)}}</p>
-      <p>Touch type: {{ touchType}}</p>
     </div>
   </main>
 </template>
@@ -38,7 +38,7 @@ export default class Stage extends Vue {
   private gravityXSpeed: number = 0
   private gravityX: number = 0.0
   private interval: any = null
-  private touchType: string = ''
+  private gameOver = false
 
   private boat = {
     x: 0,
@@ -86,14 +86,45 @@ export default class Stage extends Vue {
     this.hitBoundaries()
   }
 
-  private platformTop(curX: number, curY: number) {
+  private isOnPlatform(curX: number, curY: number) {
     const boatTop = this.boat.y - this.height
     const boatLeft = this.boat.x
     const boatRight = this.boat.x + this.boat.width
+    if (curY > boatTop && curX + this.width > boatLeft && curX < boatRight) {
+      return true
+    } else {
+      // console.log(curX + this.width, boatLeft)
+      if (
+        curY > boatTop &&
+        curX + this.width > boatLeft - 1 &&
+        curX + this.width < boatRight &&
+        this.gravityXSpeed > 0
+      ) {
+        console.log('crashed into left of platform')
+        this.gameOver = true
+      }
+      if (
+        curY > boatTop &&
+        curX < boatRight + 1 &&
+        curX > boatLeft &&
+        this.gravityXSpeed < 0
+      ) {
+        console.log('crashed into right of platform')
+        this.gameOver = true
+      }
+      return false
+    }
+  }
+
+  private platformSides(curX: number, curY: number) {
+    const boatTop = this.boat.y - this.height
+    const boatLeft = this.boat.x
+    const boatRight = this.boat.x + this.boat.width
+
     if (
-      curY > boatTop &&
-      curX + this.width / 2 > boatLeft &&
-      curX + this.width / 2 < boatRight
+      this.curX < boatLeft - 10 &&
+      this.curY < boatTop &&
+      this.curY > boatTop + this.height
     ) {
       return true
     } else {
@@ -104,13 +135,20 @@ export default class Stage extends Vue {
   private hitBoundaries() {
     const rockbottom = this.canvas.height - this.height
 
-    // stop if hit bottom
-    if (this.platformTop(this.curX, this.curY)) {
+    let onSurface = false
+    // stop if hit bottom or platform surface
+    if (this.isOnPlatform(this.curX, this.curY)) {
       this.curY = this.boat.y - this.height
       this.gravityYSpeed = 0
+      onSurface = true
     } else if (this.curY > rockbottom) {
       this.curY = rockbottom
       this.gravityYSpeed = 0
+      onSurface = true
+    } else {
+      onSurface = false
+    }
+    if (onSurface === true) {
       if (this.gravityXSpeed > 0.02) {
         this.gravityXSpeed -= 0.02
         this.gravityX -= 0.02
@@ -132,11 +170,13 @@ export default class Stage extends Vue {
     if (this.curX < 0) {
       this.curX = 0
       this.gravityXSpeed = 0
+      this.gravityX = 0
     }
     // stop if hit side walls
     if (this.curX + this.width > this.canvas.width) {
       this.curX = this.canvas.width - this.width
       this.gravityXSpeed = 0
+      this.gravityX = 0
     }
   }
 
@@ -147,7 +187,6 @@ export default class Stage extends Vue {
   }
   private accelerateY(n: number, touchType: string) {
     this.gravityY = n
-    this.touchType = touchType
   }
   private accelerateX(n: number) {
     this.gravityX = this.gravityX + n
@@ -192,6 +231,21 @@ h1 {
   position: fixed;
   top: 1rem;
   left: 1rem;
+}
+
+#gameOver {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  margin: auto;
+  color: red;
+  justify-content: center;
+  align-items: center;
+  font-size: 4rem;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 canvas {
