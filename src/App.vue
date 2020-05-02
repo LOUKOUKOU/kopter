@@ -1,16 +1,7 @@
 <template>
   <div>
     <div v-if="windowWidth == 0 && windowHeight === 0">Loading...</div>
-    <stage
-      v-else
-      :windowWidth="windowWidth"
-      :windowHeight="windowHeight"
-      :width="windowWidth / 30"
-      :height="windowHeight / 15"
-      color="#1bffe3"
-      :x="this.windowWidth / 2"
-      :y="this.windowHeight"
-    ></stage>
+    <stage v-else color="#1bffe3"></stage>
   </div>
 </template>
 
@@ -26,10 +17,12 @@ import stage from '@/Stage.vue'
 export default class App extends Vue {
   private windowWidth: number = 0
   private windowHeight: number = 0
+  private scale = 0
 
   private mounted() {
-    this.windowWidth = window.innerWidth - 16
-    this.windowHeight = window.innerHeight - 16
+    this.scale = window.devicePixelRatio
+    this.windowWidth = window.innerWidth * this.scale
+    this.windowHeight = window.innerHeight * this.scale
   }
 }
 </script>
