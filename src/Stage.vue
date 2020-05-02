@@ -234,21 +234,30 @@ export default class Stage extends Vue {
     this.tapering(this.windSpeed, onSurface)
     // Stop if hit roof
     if (this.curY < 0) {
-      this.curY = 0
-      this.YSpeed = 0
+      if (this.YSpeed > -5) {
+        this.YSpeed = -this.YSpeed
+      } else {
+        this.gameOver = true
+      }
     }
 
-    // stop if hit side walls
+    // stop if hit left side walls
     if (this.curX < 0) {
-      this.curX = 0
-      this.XSpeed = 0
-      this.gravityX = 0
+      if (this.XSpeed < 5) {
+        this.XSpeed = -this.XSpeed
+        this.gravityX = -this.gravityX
+      } else {
+        this.gameOver = true
+      }
     }
-    // stop if hit side walls
+    // stop if hit right side walls
     if (this.curX + this.kopter.width > this.canvas.width) {
-      this.curX = this.canvas.width - this.kopter.width
-      this.XSpeed = 0
-      this.gravityX = 0
+      if (this.XSpeed < 5) {
+        this.XSpeed = -this.XSpeed
+        this.gravityX = -this.gravityX
+      } else {
+        this.gameOver = true
+      }
     }
   }
 
