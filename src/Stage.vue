@@ -76,14 +76,11 @@ export default class Stage extends Vue {
   private get flag(): HTMLCanvasElement {
     if (this.windSpeed >= 0.05) {
       return require('./assets/images/flag_right_strong.png')
-    } else
-    if (this.windSpeed >= 0.02) {
+    } else if (this.windSpeed >= 0.02) {
       return require('./assets/images/flag_right_weak.png')
-    } else
-    if (this.windSpeed <= -0.02) {
+    } else if (this.windSpeed <= -0.02) {
       return require('./assets/images/flag_left_weak.png')
-    } else
-    if (this.windSpeed <= -0.05) {
+    } else if (this.windSpeed <= -0.05) {
       return require('./assets/images/flag_left_strong.png')
     } else {
       return require('./assets/images/flag_still.png')
@@ -93,12 +90,13 @@ export default class Stage extends Vue {
   private start() {
     this.canvas.width = this.windowWidth
     this.canvas.height = this.windowHeight
-    document.body.insertBefore(this.canvas, document.body.childNodes[0])
+
+    const ctx: any = this.canvas.getContext('2d')
     for (const entity of this.entities) {
-      this.drawEntity(entity)
+      this.drawEntity(entity, ctx)
     }
-    this.drawFuel()
-    this.interval = setInterval(this.updateGameArea, this.fps)
+    this.drawFuel(ctx)
+    this.interval = setInterval(() => this.updateGameArea(ctx), this.fps)
   }
 
   private mounted() {
@@ -144,11 +142,11 @@ export default class Stage extends Vue {
     ctx.fillStyle = grd
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
-    this.drawKopter()
+    this.drawKopter(ctx)
     for (const entity of this.entities) {
-      this.drawEntity(entity)
+      this.drawEntity(entity, ctx)
     }
-    this.drawFuel()
+    this.drawFuel(ctx)
   }
 
   private newPos() {
@@ -216,7 +214,6 @@ export default class Stage extends Vue {
       } else {
         onSurface = false || onSurface
       }
-
     }
     this.tapering(this.windSpeed, onSurface)
     // Stop if hit roof
@@ -259,8 +256,8 @@ export default class Stage extends Vue {
     }
   }
 
-  private updateGameArea() {
-    this.clear()
+  private updateGameArea(ctx: CanvasRenderingContext2D) {
+    this.clear(ctx)
     this.newPos()
     this.update()
   }
@@ -274,7 +271,7 @@ export default class Stage extends Vue {
         this.gravityY = n
         this.drainFuel = setInterval(() => {
           if (this.fuel.current > 0) {
-            this.fuel.current -= 10
+            this.fuel.current -= 2
           } else {
             console.log('OUT OF FUEL!')
             this.gravityY = 0 - this.gravityY
@@ -302,9 +299,7 @@ export default class Stage extends Vue {
     }, 500)
   }
 
-  private drawKopter() {
-    const ctx: any = this.canvas.getContext('2d')
-
+  private drawKopter(ctx: CanvasRenderingContext2D) {
     let img: HTMLImageElement
     if (this.direction === 'right') {
       img = this.$refs.kopterForward as HTMLImageElement
@@ -317,14 +312,12 @@ export default class Stage extends Vue {
     ctx.drawImage(img, this.curX, this.curY, this.width, this.height)
   }
 
-  private drawEntity(entity: IEntity) {
-    const ctx: any = this.canvas.getContext('2d')
+  private drawEntity(entity: IEntity, ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = 'green'
     ctx.fillRect(entity.x, entity.y, entity.width, entity.height)
   }
 
-  private drawFuel() {
-    const ctx: any = this.canvas.getContext('2d')
+  private drawFuel(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = 'orange'
     ctx.fillRect(
       this.fuel.x,
@@ -338,8 +331,7 @@ export default class Stage extends Vue {
     clearInterval(this.interval)
   }
 
-  private clear() {
-    const ctx: any = this.canvas.getContext('2d')
+  private clear(ctx: CanvasRenderingContext2D) {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
   }
 }
