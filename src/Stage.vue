@@ -7,13 +7,13 @@
     <h2 v-if="gameOver === true" id="gameOver">GAME OVER</h2>
     <canvas ref="canvas"></canvas>
     <div id="dashboard">
-      <button v-touch:start="() => accelerateX(-1, 'left')">ACCELERATE LEFT</button>
+      <button v-touch:start="() => accelerateX(-2, 'left')">ACCELERATE LEFT</button>
       <button
-        v-touch:start="() => accelerateY(-0.1, 'start')"
-        v-touch:end="() => accelerateY(0.1, 'end')"
+        v-touch:start="() => accelerateY(-0.2, 'start')"
+        v-touch:end="() => accelerateY(0.2, 'end')"
         class="exel"
       >ACCELERATE</button>
-      <button v-touch:start="() =>accelerateX(1, 'right')">ACCELERATE RIGHT</button>
+      <button v-touch:start="() =>accelerateX(2, 'right')">ACCELERATE RIGHT</button>
     </div>
     <div class="debug">
       <p>Try accelerate the red square.</p>
@@ -33,8 +33,8 @@ import IFuel from './IFuel'
 @Component
 export default class Stage extends Vue {
   @Prop() private color!: string
-  @Prop({ default: 3 }) private maxSpeedX!: number
-  @Prop({ default: 3 }) private maxSpeedY!: number
+  @Prop({ default: 10 }) private maxSpeedX!: number
+  @Prop({ default: 10 }) private maxSpeedY!: number
   @Prop({ default: 0 }) private windSpeed!: number
 
   private fps: number = 16
@@ -114,8 +114,8 @@ export default class Stage extends Vue {
     this.canvas.height = this.canvasHeight
 
     this.kopter = {
-      width: 320,
-      height: 160,
+      width: this.canvasWidth / 20,
+      height: this.canvasWidth / 40,
       x: this.canvasWidth / 2,
       y: this.canvasHeight
     }
@@ -190,7 +190,6 @@ export default class Stage extends Vue {
     ) {
       return true
     } else {
-      // console.log(curX + this.width, boatLeft)
       if (
         curY > entityTop &&
         curX + this.kopter.width > entityLeft - 1 &&
