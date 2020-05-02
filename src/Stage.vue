@@ -92,6 +92,7 @@ export default class Stage extends Vue {
     this.canvas.height = this.windowHeight
 
     const ctx: any = this.canvas.getContext('2d')
+    const rand = Math.random() * 100
     for (const entity of this.entities) {
       this.drawEntity(entity, ctx)
     }
@@ -109,7 +110,8 @@ export default class Stage extends Vue {
         y: (entity.y / 100) * this.windowHeight - theHeight,
         width: (entity.width / 100) * this.windowWidth,
         height: theHeight,
-        name: entity.name
+        name: entity.name,
+        color: entity.color
       }
 
       this.entities.push(new Entity(data))
@@ -130,8 +132,6 @@ export default class Stage extends Vue {
 
   private update() {
     const ctx: any = this.canvas.getContext('2d')
-    // ctx.fillStyle = this.color
-    // ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
     const grd = ctx.createLinearGradient(0, this.canvas.height, 0, 0)
     grd.addColorStop(0, '#d47d48')
@@ -313,7 +313,7 @@ export default class Stage extends Vue {
   }
 
   private drawEntity(entity: IEntity, ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = 'green'
+    ctx.fillStyle = entity.color
     ctx.fillRect(entity.x, entity.y, entity.width, entity.height)
   }
 

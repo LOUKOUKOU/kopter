@@ -5,6 +5,7 @@ export default class Entity implements IEntity {
     public y: number;
     public width: number;
     public height: number;
+    public color: string;
 
     public constructor(data: IEntity) {
         this.name = data.name;
@@ -12,6 +13,7 @@ export default class Entity implements IEntity {
         this.y = data.y;
         this.width = data.width;
         this.height = data.height;
+        this.color = data.color;
     }
 }
 
@@ -21,4 +23,5 @@ export interface IEntity {
     y: number;
     width: number;
     height: number;
+    color: string;
 }
