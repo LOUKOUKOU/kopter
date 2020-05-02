@@ -7,13 +7,13 @@
     <h2 v-if="gameOver === true" id="gameOver">GAME OVER</h2>
     <canvas ref="canvas"></canvas>
     <div id="dashboard">
-      <button v-touch:start="() => accelerateX(-1, 'left')">ACCELERATE LEFT</button>
+      <button v-touch:start="() => accelerateX(-2, 'left')">ACCELERATE LEFT</button>
       <button
-        v-touch:start="() => accelerateY(-0.1, 'start')"
-        v-touch:end="() => accelerateY(0.1, 'end')"
+        v-touch:start="() => accelerateY(-0.2, 'start')"
+        v-touch:end="() => accelerateY(0.2, 'end')"
         class="exel"
       >ACCELERATE</button>
-      <button v-touch:start="() =>accelerateX(1, 'right')">ACCELERATE RIGHT</button>
+      <button v-touch:start="() =>accelerateX(2, 'right')">ACCELERATE RIGHT</button>
     </div>
     <div class="debug">
       <p>Try accelerate the red square.</p>
@@ -32,16 +32,9 @@ import IFuel from './IFuel'
 
 @Component
 export default class Stage extends Vue {
-  @Prop() private windowWidth!: number
-  @Prop() private windowHeight!: number
-
-  @Prop() private width!: number
-  @Prop() private height!: number
-  @Prop() private x!: number
-  @Prop() private y!: number
   @Prop() private color!: string
-  @Prop({ default: 3 }) private maxSpeedX!: number
-  @Prop({ default: 3 }) private maxSpeedY!: number
+  @Prop({ default: 10 }) private maxSpeedX!: number
+  @Prop({ default: 10 }) private maxSpeedY!: number
   @Prop({ default: 0 }) private windSpeed!: number
 
   private fps: number = 16
@@ -51,12 +44,22 @@ export default class Stage extends Vue {
   private YSpeed: number = 0
   private XSpeed: number = 0
   private gravityX: number = 0.0
+  private bounceSpeedThreshold = 5
   private interval: any = null
   private directionAnimationTimeout: any = null
   private touchType: string = ''
   private direction: string = 'neutral'
   private gameOver = false
   private entities: Entity[] = []
+  private canvasWidth: number = 0
+  private canvasHeight: number = 0
+
+  private kopter = {
+    width: 0,
+    height: 0,
+    x: 0,
+    y: 0
+  }
 
   private drainFuel!: number
 
@@ -88,27 +91,43 @@ export default class Stage extends Vue {
   }
 
   private start() {
-    this.canvas.width = this.windowWidth
-    this.canvas.height = this.windowHeight
-
     const ctx: any = this.canvas.getContext('2d')
     const rand = Math.random() * 100
     for (const entity of this.entities) {
       this.drawEntity(entity, ctx)
     }
     this.drawFuel(ctx)
-    this.interval = setInterval(() => this.updateGameArea(ctx), this.fps)
+    this.updateGameArea(ctx)
   }
 
   private mounted() {
-    this.curX = this.x
-    this.curY = this.y
+    // Device screen size
+    this.canvas.style.width = window.innerWidth + 'px'
+    this.canvas.style.height = window.innerHeight + 'px'
+
+    // Below is the screensize to use, it includes DPS so that things do not blur
+    const scale = window.devicePixelRatio
+    this.canvasWidth = window.innerWidth * scale
+    this.canvasHeight = window.innerHeight * scale
+
+    this.canvas.width = this.canvasWidth
+    this.canvas.height = this.canvasHeight
+
+    this.kopter = {
+      width: this.canvasWidth / 20,
+      height: this.canvasWidth / 40,
+      x: this.canvasWidth / 2,
+      y: this.canvasHeight
+    }
+    this.curX = this.kopter.x
+    this.curY = this.kopter.y
+
     for (const entity of entities) {
-      const theHeight = (entity.height / 100) * this.windowHeight
+      const theHeight = (entity.height / 100) * this.canvasHeight
       const data: IEntity = {
-        x: (entity.x / 100) * this.windowWidth,
-        y: (entity.y / 100) * this.windowHeight - theHeight,
-        width: (entity.width / 100) * this.windowWidth,
+        x: (entity.x / 100) * this.canvasWidth,
+        y: (entity.y / 100) * this.canvasHeight - theHeight,
+        width: (entity.width / 100) * this.canvasWidth,
         height: theHeight,
         name: entity.name,
         color: entity.color
@@ -120,19 +139,17 @@ export default class Stage extends Vue {
     const totalFuel = 100
 
     this.fuel = {
-      x: this.windowWidth / 10,
-      y: this.windowHeight / 10,
-      width: totalFuel * 2,
-      height: this.height / 4,
+      x: this.canvasWidth / 10,
+      y: this.canvasHeight / 10,
+      width: this.canvasWidth / 4,
+      height: this.canvasWidth / 100,
       total: totalFuel,
       current: totalFuel
     }
     this.start()
   }
 
-  private update() {
-    const ctx: any = this.canvas.getContext('2d')
-
+  private update(ctx: CanvasRenderingContext2D) {
     const grd = ctx.createLinearGradient(0, this.canvas.height, 0, 0)
     grd.addColorStop(0, '#d47d48')
     grd.addColorStop(0.3, '#ddd')
@@ -163,21 +180,20 @@ export default class Stage extends Vue {
   }
 
   private isOnPlatform(curX: number, curY: number, entity: IEntity) {
-    const entityTop = entity.y - this.height
+    const entityTop = entity.y - this.kopter.height
     const entityLeft = entity.x
     const entityRight = entity.x + entity.width
     if (
       curY > entityTop &&
-      curX + this.width > entityLeft &&
+      curX + this.kopter.width > entityLeft &&
       curX < entityRight
     ) {
       return true
     } else {
-      // console.log(curX + this.width, boatLeft)
       if (
         curY > entityTop &&
-        curX + this.width > entityLeft - 1 &&
-        curX + this.width < entityRight &&
+        curX + this.kopter.width > entityLeft - this.XSpeed &&
+        curX + this.kopter.width < entityRight &&
         this.XSpeed > 0
       ) {
         console.log('crashed into left of platform')
@@ -185,7 +201,7 @@ export default class Stage extends Vue {
       }
       if (
         curY > entityTop &&
-        curX < entityRight + 1 &&
+        curX < entityRight + -this.XSpeed &&
         curX > entityLeft &&
         this.XSpeed < 0
       ) {
@@ -197,13 +213,13 @@ export default class Stage extends Vue {
   }
 
   private hitBoundaries() {
-    const rockbottom = this.canvas.height - this.height
+    const rockbottom = this.canvas.height - this.kopter.height
 
     let onSurface: boolean = false
     // stop if hit bottom or platform surface
     for (const entity of this.entities) {
       if (this.isOnPlatform(this.curX, this.curY, entity)) {
-        this.curY = entity.y - this.height
+        this.curY = entity.y - this.kopter.height
         this.YSpeed = 0
         onSurface = true || onSurface
       } else if (this.curY > rockbottom) {
@@ -218,21 +234,30 @@ export default class Stage extends Vue {
     this.tapering(this.windSpeed, onSurface)
     // Stop if hit roof
     if (this.curY < 0) {
-      this.curY = 0
-      this.YSpeed = 0
+      if (this.YSpeed > -this.bounceSpeedThreshold) {
+        this.YSpeed = -this.YSpeed
+      } else {
+        this.gameOver = true
+      }
     }
 
-    // stop if hit side walls
+    // stop if hit left side walls
     if (this.curX < 0) {
-      this.curX = 0
-      this.XSpeed = 0
-      this.gravityX = 0
+      if (this.XSpeed < this.bounceSpeedThreshold) {
+        this.XSpeed = -this.XSpeed
+        this.gravityX = -this.gravityX
+      } else {
+        this.gameOver = true
+      }
     }
-    // stop if hit side walls
-    if (this.curX + this.width > this.canvas.width) {
-      this.curX = this.canvas.width - this.width
-      this.XSpeed = 0
-      this.gravityX = 0
+    // stop if hit right side walls
+    if (this.curX + this.kopter.width > this.canvas.width) {
+      if (this.XSpeed < this.bounceSpeedThreshold) {
+        this.XSpeed = -this.XSpeed
+        this.gravityX = -this.gravityX
+      } else {
+        this.gameOver = true
+      }
     }
   }
 
@@ -256,10 +281,14 @@ export default class Stage extends Vue {
     }
   }
 
-  private updateGameArea(ctx: CanvasRenderingContext2D) {
+  private updateGameArea(ctx: CanvasRenderingContext2D): any {
+    if (this.gameOver === false) {
+      requestAnimationFrame(() => this.updateGameArea(ctx))
+    }
     this.clear(ctx)
     this.newPos()
-    this.update()
+
+    this.update(ctx)
   }
 
   private accelerateY(n: number, touchType: string) {
@@ -309,7 +338,13 @@ export default class Stage extends Vue {
       img = this.$refs.kopter as HTMLImageElement
     }
 
-    ctx.drawImage(img, this.curX, this.curY, this.width, this.height)
+    ctx.drawImage(
+      img,
+      this.curX,
+      this.curY,
+      this.kopter.width,
+      this.kopter.height
+    )
   }
 
   private drawEntity(entity: IEntity, ctx: CanvasRenderingContext2D) {
@@ -318,13 +353,9 @@ export default class Stage extends Vue {
   }
 
   private drawFuel(ctx: CanvasRenderingContext2D) {
+    const newWidth = (this.fuel.current / this.fuel.total) * this.fuel.width
     ctx.fillStyle = 'orange'
-    ctx.fillRect(
-      this.fuel.x,
-      this.fuel.y,
-      this.fuel.current * 2,
-      this.fuel.height
-    )
+    ctx.fillRect(this.fuel.x, this.fuel.y, newWidth, this.fuel.height)
   }
 
   private stop() {
@@ -332,7 +363,7 @@ export default class Stage extends Vue {
   }
 
   private clear(ctx: CanvasRenderingContext2D) {
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
   }
 }
 </script>
@@ -344,6 +375,7 @@ body {
   justify-content: center;
   align-items: center;
   background: #000;
+  overflow: hidden;
 }
 main {
   user-select: none;
