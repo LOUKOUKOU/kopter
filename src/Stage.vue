@@ -33,8 +33,8 @@ import IFuel from './IFuel'
 @Component
 export default class Stage extends Vue {
   @Prop() private color!: string
-  @Prop({ default: 10 }) private maxSpeedX!: number
-  @Prop({ default: 10 }) private maxSpeedY!: number
+  @Prop({ default: 20 }) private maxSpeedX!: number
+  @Prop({ default: 2 }) private maxSpeedY!: number
   @Prop({ default: 0 }) private windSpeed!: number
 
   private fps: number = 16
@@ -192,7 +192,7 @@ export default class Stage extends Vue {
     } else {
       if (
         curY > entityTop &&
-        curX + this.kopter.width > entityLeft - 1 &&
+        curX + this.kopter.width > entityLeft - this.XSpeed &&
         curX + this.kopter.width < entityRight &&
         this.XSpeed > 0
       ) {
@@ -201,7 +201,7 @@ export default class Stage extends Vue {
       }
       if (
         curY > entityTop &&
-        curX < entityRight + 1 &&
+        curX < entityRight + -this.XSpeed &&
         curX > entityLeft &&
         this.XSpeed < 0
       ) {
@@ -276,6 +276,7 @@ export default class Stage extends Vue {
     if (this.gameOver === false) {
       requestAnimationFrame(() => this.updateGameArea(ctx))
     }
+    this.clear(ctx)
     this.newPos()
 
     this.update(ctx)
@@ -353,7 +354,7 @@ export default class Stage extends Vue {
   }
 
   private clear(ctx: CanvasRenderingContext2D) {
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
   }
 }
 </script>
