@@ -44,13 +44,13 @@ export default class Stage extends Vue {
   private YSpeed: number = 0
   private XSpeed: number = 0
   private gravityX: number = 0.0
+  private bounceSpeedThreshold = 5
   private interval: any = null
   private directionAnimationTimeout: any = null
   private touchType: string = ''
   private direction: string = 'neutral'
   private gameOver = false
   private entities: Entity[] = []
-
   private canvasWidth: number = 0
   private canvasHeight: number = 0
 
@@ -234,7 +234,7 @@ export default class Stage extends Vue {
     this.tapering(this.windSpeed, onSurface)
     // Stop if hit roof
     if (this.curY < 0) {
-      if (this.YSpeed > -5) {
+      if (this.YSpeed > -this.bounceSpeedThreshold) {
         this.YSpeed = -this.YSpeed
       } else {
         this.gameOver = true
@@ -243,7 +243,7 @@ export default class Stage extends Vue {
 
     // stop if hit left side walls
     if (this.curX < 0) {
-      if (this.XSpeed < 5) {
+      if (this.XSpeed < this.bounceSpeedThreshold) {
         this.XSpeed = -this.XSpeed
         this.gravityX = -this.gravityX
       } else {
@@ -252,7 +252,7 @@ export default class Stage extends Vue {
     }
     // stop if hit right side walls
     if (this.curX + this.kopter.width > this.canvas.width) {
-      if (this.XSpeed < 5) {
+      if (this.XSpeed < this.bounceSpeedThreshold) {
         this.XSpeed = -this.XSpeed
         this.gravityX = -this.gravityX
       } else {
