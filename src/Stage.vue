@@ -135,7 +135,7 @@ export default class Stage extends Vue {
       width: kopterWidth,
       height: kopterHeight,
       x: this.entities[0].x,
-      y: this.entities[0].y - kopterHeight
+      y: this.entities[0].y - kopterHeight * 3
     }
     this.curX = this.kopter.x
     this.curY = this.kopter.y
@@ -183,7 +183,12 @@ export default class Stage extends Vue {
     this.hitBoundaries()
   }
 
-  private isOnPlatform(curX: number, curY: number, entity: IEntity) {
+  private isTouchingEntity(
+    curX: number,
+    curY: number,
+    entity: IEntity,
+    isPlatform: boolean
+  ) {
     const entityTop = entity.y - this.kopter.height
     const entityLeft = entity.x
     const entityRight = entity.x + entity.width
@@ -191,12 +196,19 @@ export default class Stage extends Vue {
 
     if (
       curY > entityTop &&
-      curY < entityBottom &&
+      curY < entityTop + this.kopter.height &&
       curX + this.kopter.width > entityLeft &&
       curX < entityRight &&
       this.YSpeed >= 0
     ) {
-      return true
+      // it is on the top and can rest here
+      if (isPlatform === true) {
+        return true
+      } else {
+        console.log('crashed into top of platform')
+        this.gameOver = true
+        return false
+      }
     } else {
       if (
         curY > entityTop &&
@@ -236,7 +248,7 @@ export default class Stage extends Vue {
     let onSurface: boolean = false
     // stop if hit bottom or platform surface
     for (const entity of this.entities) {
-      if (this.isOnPlatform(this.curX, this.curY, entity)) {
+      if (this.isTouchingEntity(this.curX, this.curY, entity, true)) {
         this.curY = entity.y - this.kopter.height
         this.YSpeed = 0
         onSurface = true || onSurface

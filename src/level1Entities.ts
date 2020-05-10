@@ -5,7 +5,7 @@ export const entities: IEntity[] = [
     {
         name: 'skyscraper',
         x: 50,
-        y: 50,
+        y: 100,
         width: 10,
         height: 20,
         color: 'red'
