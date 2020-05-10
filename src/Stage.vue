@@ -1,8 +1,6 @@
 <template>
   <main>
-    <img ref="kopter" class="invis" :src="require('./assets/images/kopter.gif')" />
-    <img ref="kopterBackward" class="invis" :src="require('./assets/images/kopter_backward.gif')" />
-    <img ref="kopterForward" class="invis" :src="require('./assets/images/kopter_forward.gif')" />
+    <img ref="kopter" class="invis" :src="require('./assets/images/kopter.png')" />
     <img class="flag" :src="flag" />
     <h2 v-if="gameOver === true" id="gameOver">GAME OVER</h2>
     <canvas ref="canvas"></canvas>
@@ -29,6 +27,7 @@ import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import { entities } from './level1Entities'
 import Entity, { IEntity } from './Entity'
 import IFuel from './IFuel'
+import Animator from '@/Animator';
 
 @Component
 export default class Stage extends Vue {
@@ -61,6 +60,8 @@ export default class Stage extends Vue {
     y: 0
   }
 
+  private kopterAnimator?: Animator;
+
   private drainFuel!: number
 
   private fuel: IFuel = {
@@ -92,6 +93,13 @@ export default class Stage extends Vue {
 
   private start() {
     const ctx: any = this.canvas.getContext('2d')
+    this.kopterAnimator = new Animator(
+      230,
+      120,
+      4,
+      this.$refs.kopter as HTMLImageElement,
+      ctx
+    )
     const rand = Math.random() * 100
     for (const entity of this.entities) {
       this.drawEntity(entity, ctx)
@@ -128,8 +136,8 @@ export default class Stage extends Vue {
       this.entities.push(new Entity(data))
     }
 
-    const kopterWidth = this.canvasWidth / 20
-    const kopterHeight = this.canvasWidth / 40
+    const kopterWidth = this.canvasWidth / 12
+    const kopterHeight = this.canvasWidth / 23
 
     // placing kopter ontop of first skyscraper
     this.kopter = {
@@ -181,6 +189,8 @@ export default class Stage extends Vue {
     this.XSpeed = this.gravityX
     this.curX += this.XSpeed
     this.curY += this.YSpeed
+    this.kopter.x = this.curX
+    this.kopter.y = this.curY
     this.hitBoundaries()
   }
 
@@ -355,22 +365,9 @@ export default class Stage extends Vue {
   }
 
   private drawKopter(ctx: CanvasRenderingContext2D) {
-    let img: HTMLImageElement
-    if (this.direction === 'right') {
-      img = this.$refs.kopterForward as HTMLImageElement
-    } else if (this.direction === 'left') {
-      img = this.$refs.kopterBackward as HTMLImageElement
-    } else {
-      img = this.$refs.kopter as HTMLImageElement
+    if (this.kopterAnimator) {
+      this.kopterAnimator.nextFrame(this.kopter as any)
     }
-
-    ctx.drawImage(
-      img,
-      this.curX,
-      this.curY,
-      this.kopter.width,
-      this.kopter.height
-    )
   }
 
   private drawEntity(entity: IEntity, ctx: CanvasRenderingContext2D) {
