@@ -121,7 +121,8 @@ export default class Stage extends Vue {
         width: (entity.width / 100) * this.canvasWidth,
         height: theHeight,
         name: entity.name,
-        color: entity.color
+        color: entity.color,
+        isPlatform: entity.isPlatform
       }
 
       this.entities.push(new Entity(data))
@@ -183,12 +184,7 @@ export default class Stage extends Vue {
     this.hitBoundaries()
   }
 
-  private isTouchingEntity(
-    curX: number,
-    curY: number,
-    entity: IEntity,
-    isPlatform: boolean
-  ) {
+  private isTouchingEntity(curX: number, curY: number, entity: IEntity) {
     const entityTop = entity.y - this.kopter.height
     const entityLeft = entity.x
     const entityRight = entity.x + entity.width
@@ -202,7 +198,7 @@ export default class Stage extends Vue {
       this.YSpeed >= 0
     ) {
       // it is on the top and can rest here
-      if (isPlatform === true) {
+      if (entity.isPlatform === true) {
         return true
       } else {
         console.log('crashed into top of platform')
@@ -248,7 +244,7 @@ export default class Stage extends Vue {
     let onSurface: boolean = false
     // stop if hit bottom or platform surface
     for (const entity of this.entities) {
-      if (this.isTouchingEntity(this.curX, this.curY, entity, true)) {
+      if (this.isTouchingEntity(this.curX, this.curY, entity)) {
         this.curY = entity.y - this.kopter.height
         this.YSpeed = 0
         onSurface = true || onSurface
