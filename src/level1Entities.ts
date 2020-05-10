@@ -1,4 +1,4 @@
-import { IEntity } from './Entity';
+import { IEntity } from './entity/Entity';
 
 // We give entities a value out of 100. 100 being full screen width/height.
 export const entities: IEntity[] = [

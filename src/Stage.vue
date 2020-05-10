@@ -15,8 +15,8 @@
     </div>
     <div class="debug">
       <p>Try accelerate the red square.</p>
-      <p>Vertical Speed: {{ -Math.round(YSpeed)}}</p>
-      <p>Horizontal Speed: {{ Math.round(XSpeed)}}</p>
+      <p>Vertical Speed: {{ -Math.round(ySpeed)}}</p>
+      <p>Horizontal Speed: {{ Math.round(xSpeed)}}</p>
       <p>Game Over: {{ gameOver === true }}</p>
     </div>
   </main>
@@ -25,7 +25,9 @@
 <script lang="ts">
 import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import { entities } from './level1Entities'
-import Entity, { IEntity } from './Entity'
+import Entity, { IEntity } from './entity/Entity'
+import Bullet, { IBullet } from './entity/Bullet'
+
 import IFuel from './IFuel'
 import Animator from '@/Animator';
 
@@ -36,12 +38,11 @@ export default class Stage extends Vue {
   @Prop({ default: 100 }) private maxSpeedY!: number
   @Prop({ default: 0 }) private windSpeed!: number
 
-  private fps: number = 16
   private curX: number = 0
   private curY: number = 0
   private gravityY: number = 0.05
-  private YSpeed: number = 0
-  private XSpeed: number = 0
+  private ySpeed: number = 0
+  private xSpeed: number = 0
   private gravityX: number = 0.0
   private bounceSpeedThreshold = 50
   private interval: any = null
@@ -52,6 +53,7 @@ export default class Stage extends Vue {
   private entities: Entity[] = []
   private canvasWidth: number = 0
   private canvasHeight: number = 0
+  private bullets: Bullet[] = []
 
   private kopter = {
     width: 0,
@@ -105,7 +107,26 @@ export default class Stage extends Vue {
       this.drawEntity(entity, ctx)
     }
     this.drawFuel(ctx)
+    for (const bullet of this.bullets) {
+      this.drawEntity(bullet, ctx)
+    }
     this.updateGameArea(ctx)
+  }
+
+  private getScaledX(x: number) {
+    return (x / 100) * this.canvasWidth
+  }
+
+  private getScaledWidth(width: number) {
+    return (width / 100) * this.canvasWidth
+  }
+
+  private getScaledY(y: number, scaledHeight: number) {
+    return (y / 100) * this.canvasHeight - scaledHeight
+  }
+
+  private getScaledHeight(height: number) {
+    return (height / 100) * this.canvasHeight
   }
 
   private mounted() {
@@ -122,11 +143,11 @@ export default class Stage extends Vue {
     this.canvas.height = this.canvasHeight
 
     for (const entity of entities) {
-      const theHeight = (entity.height / 100) * this.canvasHeight
+      const theHeight = this.getScaledHeight(entity.height)
       const data: IEntity = {
-        x: (entity.x / 100) * this.canvasWidth,
-        y: (entity.y / 100) * this.canvasHeight - theHeight,
-        width: (entity.width / 100) * this.canvasWidth,
+        x: this.getScaledX(entity.x),
+        y: this.getScaledY(entity.y, theHeight),
+        width: this.getScaledX(entity.width),
         height: theHeight,
         name: entity.name,
         color: entity.color,
@@ -150,14 +171,36 @@ export default class Stage extends Vue {
     this.curY = this.kopter.y
 
     const totalFuel = 100
+    const fuelWidth = 25
+    const fuelHeight = 2
 
     this.fuel = {
-      x: this.canvasWidth / 10,
-      y: this.canvasHeight / 10,
-      width: this.canvasWidth / 4,
-      height: this.canvasWidth / 100,
+      x: this.getScaledX(10),
+      y: this.getScaledY(10, this.getScaledHeight(fuelHeight)),
+      width: this.getScaledWidth(25),
+      height: this.getScaledHeight(fuelHeight),
       total: totalFuel,
       current: totalFuel
+    }
+
+    // Percentage of the screen
+    const bulletHeight = 0.5
+    const bulletWidth = 0.5
+
+    for (let i = 0; i < 1000; i++) {
+      this.bullets.push(
+        new Bullet({
+          name: 'bullet',
+          x: this.getScaledX(10 - i),
+          y: this.getScaledY(78, this.getScaledHeight(bulletHeight)),
+          width: this.getScaledWidth(bulletWidth),
+          height: this.getScaledHeight(bulletHeight),
+          color: 'black',
+          isPlatform: false,
+          xSpeed: 8,
+          ySpeed: 0
+        })
+      )
     }
     this.start()
   }
@@ -177,38 +220,49 @@ export default class Stage extends Vue {
       this.drawEntity(entity, ctx)
     }
     this.drawFuel(ctx)
+    for (const bullet of this.bullets) {
+      this.drawEntity(bullet, ctx)
+    }
   }
 
   private newPos() {
     if (
-      this.YSpeed + this.gravityY <= this.maxSpeedY &&
-      this.YSpeed + this.gravityY >= -this.maxSpeedY
+      this.ySpeed + this.gravityY <= this.maxSpeedY &&
+      this.ySpeed + this.gravityY >= -this.maxSpeedY
     ) {
-      this.YSpeed += this.gravityY
+      this.ySpeed += this.gravityY
     }
-    this.XSpeed = this.gravityX
-    this.curX += this.XSpeed
-    this.curY += this.YSpeed
+    this.xSpeed = this.gravityX
+    this.curX += this.xSpeed
+    this.curY += this.ySpeed
     this.kopter.x = this.curX
     this.kopter.y = this.curY
+    for (let bullet of this.bullets) {
+      bullet.x += bullet.xSpeed
+      bullet.y -= bullet.ySpeed
+    }
     this.hitBoundaries()
   }
 
-  private isTouchingEntity(curX: number, curY: number, entity: IEntity) {
+  private isTouchingEntity(
+    curX: number,
+    curY: number,
+    entity: IEntity | IBullet
+  ) {
     const entityTop = entity.y - this.kopter.height
     const entityLeft = entity.x
     const entityRight = entity.x + entity.width
     const entityBottom = entity.y + entity.height
-
     if (
       curY > entityTop &&
       curY < entityTop + this.kopter.height &&
       curX + this.kopter.width > entityLeft &&
       curX < entityRight &&
-      this.YSpeed >= 0
+      this.ySpeed >= 0
     ) {
       // it is on the top and can rest here
       if (entity.isPlatform === true) {
+        // console.log(entity instanceof Entity)
         return true
       } else {
         console.log('crashed into top of platform')
@@ -219,18 +273,18 @@ export default class Stage extends Vue {
       if (
         curY > entityTop &&
         curY < entityBottom &&
-        curX + this.kopter.width > entityLeft - this.XSpeed &&
+        curX + this.kopter.width > entityLeft - this.xSpeed &&
         curX + this.kopter.width < entityRight &&
-        this.XSpeed > 0
+        this.xSpeed > 0
       ) {
         console.log('crashed into left of platform')
         this.gameOver = true
       } else if (
         curY > entityTop &&
         curY < entityBottom &&
-        curX < entityRight + -this.XSpeed &&
+        curX < entityRight + -this.xSpeed &&
         curX > entityLeft &&
-        this.XSpeed < 0
+        this.xSpeed < 0
       ) {
         console.log('crashed into right of platform')
         this.gameOver = true
@@ -239,7 +293,7 @@ export default class Stage extends Vue {
         curY > entityTop &&
         curX + this.kopter.width > entityLeft &&
         curX < entityRight &&
-        this.YSpeed < 0
+        this.ySpeed < 0
       ) {
         console.log('crashed into bottom of platform')
         this.gameOver = true
@@ -256,22 +310,38 @@ export default class Stage extends Vue {
     for (const entity of this.entities) {
       if (this.isTouchingEntity(this.curX, this.curY, entity)) {
         this.curY = entity.y - this.kopter.height
-        this.YSpeed = 0
+        this.ySpeed = 0
         onSurface = true || onSurface
       } else if (this.curY > rockbottom) {
         this.curY = rockbottom
-        this.YSpeed = 0
+        this.ySpeed = 0
         onSurface = true || onSurface
         this.gameOver = true
       } else {
         onSurface = false || onSurface
       }
     }
+
+    for (const bullet of this.bullets) {
+      if (this.isTouchingEntity(this.curX, this.curY, bullet)) {
+        this.curY = bullet.y - this.kopter.height
+        this.ySpeed = 0
+        onSurface = true || onSurface
+      } else if (this.curY > rockbottom) {
+        this.curY = rockbottom
+        this.ySpeed = 0
+        onSurface = true || onSurface
+        this.gameOver = true
+      } else {
+        onSurface = false || onSurface
+      }
+    }
+
     this.tapering(this.windSpeed, onSurface)
     // Stop if hit roof
     if (this.curY < 0) {
-      if (this.YSpeed > -this.bounceSpeedThreshold) {
-        this.YSpeed = -this.YSpeed
+      if (this.ySpeed > -this.bounceSpeedThreshold) {
+        this.ySpeed = -this.ySpeed
       } else {
         this.gameOver = true
       }
@@ -279,8 +349,8 @@ export default class Stage extends Vue {
 
     // stop if hit left side walls
     if (this.curX < 0) {
-      if (-this.XSpeed < this.bounceSpeedThreshold) {
-        this.XSpeed = -this.XSpeed
+      if (-this.xSpeed < this.bounceSpeedThreshold) {
+        this.xSpeed = -this.xSpeed
         this.gravityX = -this.gravityX
       } else {
         this.gameOver = true
@@ -288,8 +358,8 @@ export default class Stage extends Vue {
     }
     // stop if hit right side walls
     if (this.curX + this.kopter.width > this.canvas.width) {
-      if (this.XSpeed < this.bounceSpeedThreshold) {
-        this.XSpeed = -this.XSpeed
+      if (this.xSpeed < this.bounceSpeedThreshold) {
+        this.xSpeed = -this.xSpeed
         this.gravityX = -this.gravityX
       } else {
         this.gameOver = true
@@ -298,20 +368,20 @@ export default class Stage extends Vue {
   }
 
   private tapering(resistance: number = 0.02, onSurface: boolean) {
-    if (this.XSpeed > 0.02) {
-      this.XSpeed -= 0.02
+    if (this.xSpeed > 0.02) {
+      this.xSpeed -= 0.02
       this.gravityX -= 0.02
-    } else if (this.XSpeed < -0.02) {
-      this.XSpeed += 0.02
+    } else if (this.xSpeed < -0.02) {
+      this.xSpeed += 0.02
       this.gravityX += 0.02
     } else {
-      this.XSpeed = 0
+      this.xSpeed = 0
       this.gravityX = 0
     }
 
     if (onSurface === false) {
-      if (this.XSpeed <= this.maxSpeedX && this.XSpeed >= -this.maxSpeedX) {
-        this.XSpeed += resistance
+      if (this.xSpeed <= this.maxSpeedX && this.xSpeed >= -this.maxSpeedX) {
+        this.xSpeed += resistance
         this.gravityX += resistance
       }
     }
@@ -373,6 +443,11 @@ export default class Stage extends Vue {
   private drawEntity(entity: IEntity, ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = entity.color
     ctx.fillRect(entity.x, entity.y, entity.width, entity.height)
+  }
+
+  private drawBullet(bullet: IBullet, ctx: CanvasRenderingContext2D) {
+    ctx.fillStyle = bullet.color
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height)
   }
 
   private drawFuel(ctx: CanvasRenderingContext2D) {
