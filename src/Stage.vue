@@ -171,24 +171,28 @@ export default class Stage extends Vue {
     this.curY = this.kopter.y
 
     const totalFuel = 100
+    const fuelWidth = 25
+    const fuelHeight = 2
 
     this.fuel = {
-      x: this.canvasWidth / 10,
-      y: this.canvasHeight / 10,
-      width: this.canvasWidth / 4,
-      height: this.canvasWidth / 100,
+      x: this.getScaledX(10),
+      y: this.getScaledY(10, this.getScaledHeight(fuelHeight)),
+      width: this.getScaledWidth(25),
+      height: this.getScaledHeight(fuelHeight),
       total: totalFuel,
       current: totalFuel
     }
 
+    // Percentage of the screen
     const bulletHeight = 2
     const bulletWidth = 2
+
     this.bullet = new Bullet({
       name: 'bullet',
-      x: (30 / 100) * this.canvasWidth,
-      y: (78 / 100) * this.canvasHeight - bulletHeight,
-      width: (bulletWidth / 100) * this.canvasWidth,
-      height: (bulletHeight / 100) * this.canvasHeight,
+      x: this.getScaledX(30),
+      y: this.getScaledY(78, this.getScaledHeight(bulletHeight)),
+      width: this.getScaledWidth(bulletWidth),
+      height: this.getScaledHeight(bulletHeight),
       color: 'black',
       isPlatform: false,
       xSpeed: 2,
