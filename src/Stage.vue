@@ -33,8 +33,8 @@ import IFuel from './IFuel'
 @Component
 export default class Stage extends Vue {
   @Prop() private color!: string
-  @Prop({ default: 10 }) private maxSpeedX!: number
-  @Prop({ default: 10 }) private maxSpeedY!: number
+  @Prop({ default: 100 }) private maxSpeedX!: number
+  @Prop({ default: 100 }) private maxSpeedY!: number
   @Prop({ default: 0 }) private windSpeed!: number
 
   private fps: number = 16
@@ -44,7 +44,7 @@ export default class Stage extends Vue {
   private YSpeed: number = 0
   private XSpeed: number = 0
   private gravityX: number = 0.0
-  private bounceSpeedThreshold = 5
+  private bounceSpeedThreshold = 50
   private interval: any = null
   private directionAnimationTimeout: any = null
   private touchType: string = ''
@@ -113,15 +113,6 @@ export default class Stage extends Vue {
     this.canvas.width = this.canvasWidth
     this.canvas.height = this.canvasHeight
 
-    this.kopter = {
-      width: this.canvasWidth / 20,
-      height: this.canvasWidth / 40,
-      x: this.canvasWidth / 2,
-      y: this.canvasHeight
-    }
-    this.curX = this.kopter.x
-    this.curY = this.kopter.y
-
     for (const entity of entities) {
       const theHeight = (entity.height / 100) * this.canvasHeight
       const data: IEntity = {
@@ -135,6 +126,19 @@ export default class Stage extends Vue {
 
       this.entities.push(new Entity(data))
     }
+
+    const kopterWidth = this.canvasWidth / 20
+    const kopterHeight = this.canvasWidth / 40
+
+    // placing kopter ontop of first skyscraper
+    this.kopter = {
+      width: kopterWidth,
+      height: kopterHeight,
+      x: this.entities[0].x,
+      y: this.entities[0].y - kopterHeight
+    }
+    this.curX = this.kopter.x
+    this.curY = this.kopter.y
 
     const totalFuel = 100
 
@@ -183,29 +187,43 @@ export default class Stage extends Vue {
     const entityTop = entity.y - this.kopter.height
     const entityLeft = entity.x
     const entityRight = entity.x + entity.width
+    const entityBottom = entity.y + entity.height
+
     if (
       curY > entityTop &&
+      curY < entityBottom &&
       curX + this.kopter.width > entityLeft &&
-      curX < entityRight
+      curX < entityRight &&
+      this.YSpeed >= 0
     ) {
       return true
     } else {
       if (
         curY > entityTop &&
+        curY < entityBottom &&
         curX + this.kopter.width > entityLeft - this.XSpeed &&
         curX + this.kopter.width < entityRight &&
         this.XSpeed > 0
       ) {
         console.log('crashed into left of platform')
         this.gameOver = true
-      }
-      if (
+      } else if (
         curY > entityTop &&
+        curY < entityBottom &&
         curX < entityRight + -this.XSpeed &&
         curX > entityLeft &&
         this.XSpeed < 0
       ) {
         console.log('crashed into right of platform')
+        this.gameOver = true
+      } else if (
+        curY < entityBottom &&
+        curY > entityTop &&
+        curX + this.kopter.width > entityLeft &&
+        curX < entityRight &&
+        this.YSpeed < 0
+      ) {
+        console.log('crashed into bottom of platform')
         this.gameOver = true
       }
       return false
@@ -243,7 +261,7 @@ export default class Stage extends Vue {
 
     // stop if hit left side walls
     if (this.curX < 0) {
-      if (this.XSpeed < this.bounceSpeedThreshold) {
+      if (-this.XSpeed < this.bounceSpeedThreshold) {
         this.XSpeed = -this.XSpeed
         this.gravityX = -this.gravityX
       } else {
