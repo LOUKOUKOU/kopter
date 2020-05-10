@@ -5,10 +5,11 @@ export const entities: IEntity[] = [
     {
         name: 'skyscraper',
         x: 50,
-        y: 50,
+        y: 100,
         width: 10,
         height: 20,
-        color: 'red'
+        color: 'red',
+        isPlatform: true
     },
     {
         name: 'skyscraper2',
@@ -16,6 +17,7 @@ export const entities: IEntity[] = [
         y: 50,
         width: 10,
         height: 20,
-        color: 'blue'
+        color: 'blue',
+        isPlatform: false
     }
 ]
