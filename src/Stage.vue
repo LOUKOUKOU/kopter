@@ -27,6 +27,7 @@ import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import { entities } from './level1Entities'
 import Entity, { IEntity } from './entity/Entity'
 import Bullet, { IBullet } from './entity/Bullet'
+import Turret, { ITurret } from './entity/Turret'
 
 import IFuel from './IFuel'
 import Animator from '@/Animator'
@@ -54,6 +55,8 @@ export default class Stage extends Vue {
   private canvasWidth: number = 0
   private canvasHeight: number = 0
   private bullets: Bullet[] = []
+
+  private turrets: Turret[] = []
 
   private kopter = {
     width: 0,
@@ -165,7 +168,7 @@ export default class Stage extends Vue {
       width: kopterWidth,
       height: kopterHeight,
       x: this.entities[0].x,
-      y: this.entities[0].y - kopterHeight * 3
+      y: this.entities[0].y - kopterHeight * 1
     }
     this.curX = this.kopter.x
     this.curY = this.kopter.y
@@ -187,7 +190,7 @@ export default class Stage extends Vue {
     const bulletHeight = 0.5
     const bulletWidth = 0.5
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 1; i++) {
       this.bullets.push(
         new Bullet({
           name: 'bullet',
@@ -197,13 +200,35 @@ export default class Stage extends Vue {
           height: this.getScaledHeight(bulletHeight),
           color: 'black',
           isPlatform: false,
-          xSpeed: 8,
+          xSpeed: 5,
           ySpeed: 0
+        })
+      )
+    }
+
+    // Percentage of the screen
+    const turretHeight = 6
+    const turretWidth = 3
+
+    for (let i = 0; i < 1; i++) {
+      this.turrets.push(
+        new Turret({
+          name: 'bullet',
+          x: this.getScaledX(80),
+          y: this.getScaledY(100, this.getScaledHeight(turretHeight)),
+          width: this.getScaledWidth(turretWidth),
+          height: this.getScaledHeight(turretHeight),
+          color: 'black',
+          isPlatform: false,
+          rateOfFire: 5,
+          burst: false
         })
       )
     }
     this.start()
   }
+
+  private createBullets() {}
 
   private update(ctx: CanvasRenderingContext2D) {
     const grd = ctx.createLinearGradient(0, this.canvas.height, 0, 0)
@@ -220,8 +245,21 @@ export default class Stage extends Vue {
       this.drawEntity(entity, ctx)
     }
     this.drawFuel(ctx)
-    for (const bullet of this.bullets) {
-      this.drawEntity(bullet, ctx)
+    for (let i = 0; i < this.bullets.length; i++) {
+      if (
+        this.bullets[i].x > this.canvasWidth ||
+        this.bullets[i].x < 0 ||
+        this.bullets[i].y > this.canvasHeight ||
+        this.bullets[i].y < 0
+      ) {
+        this.$delete(this.bullets, i)
+      } else {
+        this.drawEntity(this.bullets[i], ctx)
+      }
+    }
+
+    for (const turret of this.turrets) {
+      this.drawEntity(turret, ctx)
     }
   }
 
