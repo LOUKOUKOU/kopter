@@ -29,7 +29,7 @@ import Entity, { IEntity } from './entity/Entity'
 import Bullet, { IBullet } from './entity/Bullet'
 
 import IFuel from './IFuel'
-import Animator from '@/Animator';
+import Animator from '@/Animator'
 
 @Component
 export default class Stage extends Vue {
@@ -62,7 +62,7 @@ export default class Stage extends Vue {
     y: 0
   }
 
-  private kopterAnimator?: Animator;
+  private kopterAnimator?: Animator
 
   private drainFuel!: number
 
@@ -404,8 +404,11 @@ export default class Stage extends Vue {
     } else {
       if (this.fuel.current > 0) {
         this.gravityY = n
+        // this is for each click so  people cant exploit
+        this.fuel.current -= 1
         this.drainFuel = setInterval(() => {
           if (this.fuel.current > 0) {
+            // this is the rate at which fuel burns on touchhold
             this.fuel.current -= 2
           } else {
             console.log('OUT OF FUEL!')
@@ -438,8 +441,7 @@ export default class Stage extends Vue {
     if (this.kopterAnimator) {
       this.kopterAnimator.nextFrame(
         this.kopter as any,
-        this.direction === 'neutral' ? 0
-        : this.direction === 'left' ? 1 : 2
+        this.direction === 'neutral' ? 0 : this.direction === 'left' ? 1 : 2
       )
     }
   }
