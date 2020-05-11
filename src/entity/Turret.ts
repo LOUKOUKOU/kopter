@@ -2,7 +2,7 @@ import Entity, { IEntity } from './Entity';
 
 export default class Turret extends Entity {
 
-    public rateOfFire: number
+    public rateOfFire: number // how many bullets per minute
     public burst: boolean
 
     public constructor(data: ITurret) {

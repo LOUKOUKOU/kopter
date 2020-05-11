@@ -114,6 +114,10 @@ export default class Stage extends Vue {
       this.drawEntity(bullet, ctx)
     }
     this.updateGameArea(ctx)
+
+    for (const turret of this.turrets) {
+      this.createBullets(turret)
+    }
   }
 
   private getScaledX(x: number) {
@@ -187,15 +191,38 @@ export default class Stage extends Vue {
     }
 
     // Percentage of the screen
+    const turretHeight = 6
+    const turretWidth = 3
+
+    for (let i = 0; i < 1; i++) {
+      this.turrets.push(
+        new Turret({
+          name: 'bullet',
+          x: this.getScaledX(12),
+          y: this.getScaledY(30, this.getScaledHeight(turretHeight)),
+          width: this.getScaledWidth(turretWidth),
+          height: this.getScaledHeight(turretHeight),
+          color: 'black',
+          isPlatform: false,
+          rateOfFire: 30,
+          burst: false
+        })
+      )
+    }
+    this.start()
+  }
+
+  private createBullets(turret: ITurret) {
+    // Percentage of the screen
     const bulletHeight = 0.5
     const bulletWidth = 0.5
 
-    for (let i = 0; i < 1; i++) {
+    setInterval(() => {
       this.bullets.push(
         new Bullet({
           name: 'bullet',
-          x: this.getScaledX(10 - i),
-          y: this.getScaledY(78, this.getScaledHeight(bulletHeight)),
+          x: turret.x,
+          y: turret.y,
           width: this.getScaledWidth(bulletWidth),
           height: this.getScaledHeight(bulletHeight),
           color: 'black',
@@ -204,31 +231,8 @@ export default class Stage extends Vue {
           ySpeed: 0
         })
       )
-    }
-
-    // Percentage of the screen
-    const turretHeight = 6
-    const turretWidth = 3
-
-    for (let i = 0; i < 1; i++) {
-      this.turrets.push(
-        new Turret({
-          name: 'bullet',
-          x: this.getScaledX(80),
-          y: this.getScaledY(100, this.getScaledHeight(turretHeight)),
-          width: this.getScaledWidth(turretWidth),
-          height: this.getScaledHeight(turretHeight),
-          color: 'black',
-          isPlatform: false,
-          rateOfFire: 5,
-          burst: false
-        })
-      )
-    }
-    this.start()
+    }, (60 / turret.rateOfFire) * 1000)
   }
-
-  private createBullets() {}
 
   private update(ctx: CanvasRenderingContext2D) {
     const grd = ctx.createLinearGradient(0, this.canvas.height, 0, 0)
