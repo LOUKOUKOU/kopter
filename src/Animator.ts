@@ -1,5 +1,3 @@
-import { IEntity } from './Entity';
-
 export default class Animator {
 
   private frameWidth: number;
@@ -24,11 +22,11 @@ export default class Animator {
     this.frameHeight = frameHeight
   }
 
-  public nextFrame(entity: any) {
+  public nextFrame(entity: any, level: number) {
     this.context.drawImage(
       this.image,
       this.frameWidth * this.CurrentFrame,
-      0,
+      level * this.frameHeight,
       this.frameWidth,
       this.frameHeight,
       entity.x,

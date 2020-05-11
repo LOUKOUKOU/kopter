@@ -98,7 +98,7 @@ export default class Stage extends Vue {
     this.kopterAnimator = new Animator(
       230,
       120,
-      4,
+      6,
       this.$refs.kopter as HTMLImageElement,
       ctx
     )
@@ -436,7 +436,11 @@ export default class Stage extends Vue {
 
   private drawKopter(ctx: CanvasRenderingContext2D) {
     if (this.kopterAnimator) {
-      this.kopterAnimator.nextFrame(this.kopter as any)
+      this.kopterAnimator.nextFrame(
+        this.kopter as any,
+        this.direction === 'neutral' ? 0
+        : this.direction === 'left' ? 1 : 2
+      )
     }
   }
 

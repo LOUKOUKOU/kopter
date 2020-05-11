@@ -26,7 +26,7 @@
             </struct>
         </array>
         <key>allowRotation</key>
-        <true/>
+        <false/>
         <key>shapeDebug</key>
         <false/>
         <key>dpi</key>
@@ -34,7 +34,7 @@
         <key>dataFormat</key>
         <string>spritesheet-only</string>
         <key>textureFileName</key>
-        <filename>kopter.png</filename>
+        <filename>kopter-{n}.png</filename>
         <key>flipPVR</key>
         <false/>
         <key>pvrCompressionQuality</key>
@@ -88,9 +88,9 @@
         <key>maxTextureSize</key>
         <QSize>
             <key>width</key>
-            <int>1280</int>
+            <int>1380</int>
             <key>height</key>
-            <int>120</int>
+            <int>1380</int>
         </QSize>
         <key>fixedTextureSize</key>
         <QSize>
@@ -130,7 +130,7 @@
         <key>dataFileNames</key>
         <map type="GFileNameMap"/>
         <key>multiPack</key>
-        <true/>
+        <false/>
         <key>forceIdenticalLayout</key>
         <false/>
         <key>outputFormat</key>
@@ -175,10 +175,24 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
-            <key type="filename">kopter.gif</key>
-            <key type="filename">kopter_1.gif</key>
-            <key type="filename">kopter_2.gif</key>
-            <key type="filename">kopter_3.gif</key>
+            <key type="filename">kopter_1.png</key>
+            <key type="filename">kopter_10.png</key>
+            <key type="filename">kopter_11.png</key>
+            <key type="filename">kopter_12.png</key>
+            <key type="filename">kopter_13.png</key>
+            <key type="filename">kopter_14.png</key>
+            <key type="filename">kopter_15.png</key>
+            <key type="filename">kopter_16.png</key>
+            <key type="filename">kopter_17.png</key>
+            <key type="filename">kopter_18.png</key>
+            <key type="filename">kopter_2.png</key>
+            <key type="filename">kopter_3.png</key>
+            <key type="filename">kopter_4.png</key>
+            <key type="filename">kopter_5.png</key>
+            <key type="filename">kopter_6.png</key>
+            <key type="filename">kopter_7.png</key>
+            <key type="filename">kopter_8.png</key>
+            <key type="filename">kopter_9.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -196,10 +210,24 @@
         </map>
         <key>fileList</key>
         <array>
-            <filename>kopter.gif</filename>
-            <filename>kopter_1.gif</filename>
-            <filename>kopter_2.gif</filename>
-            <filename>kopter_3.gif</filename>
+            <filename>kopter_1.png</filename>
+            <filename>kopter_2.png</filename>
+            <filename>kopter_3.png</filename>
+            <filename>kopter_4.png</filename>
+            <filename>kopter_5.png</filename>
+            <filename>kopter_6.png</filename>
+            <filename>kopter_10.png</filename>
+            <filename>kopter_11.png</filename>
+            <filename>kopter_12.png</filename>
+            <filename>kopter_13.png</filename>
+            <filename>kopter_14.png</filename>
+            <filename>kopter_15.png</filename>
+            <filename>kopter_16.png</filename>
+            <filename>kopter_17.png</filename>
+            <filename>kopter_18.png</filename>
+            <filename>kopter_7.png</filename>
+            <filename>kopter_8.png</filename>
+            <filename>kopter_9.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
