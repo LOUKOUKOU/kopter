@@ -229,6 +229,14 @@ export default class Stage extends Vue {
     const bulletWidth = 0.5
 
     setInterval(() => {
+      // GOOGLE "x y speed for angle"
+      // Screen ratio plays a factor, need to eliminate
+      // https://stackoverflow.com/questions/5192983/calculating-x-y-movement-based-on-rotation-angle
+      // The below actually makes fuckall sense, but ya
+      const speed = 4
+      const angle = -0.3
+      const x = speed * Math.cos(angle)
+      const y = speed * Math.sin(angle)
       this.bullets.push(
         new Bullet({
           name: 'bullet',
@@ -238,8 +246,8 @@ export default class Stage extends Vue {
           height: this.getScaledHeight(bulletHeight),
           color: 'black',
           isPlatform: false,
-          xSpeed: 20,
-          ySpeed: 1
+          xSpeed: x,
+          ySpeed: -y
         })
       )
     }, (60 / turret.rateOfFire) * 1000)
