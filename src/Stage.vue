@@ -203,8 +203,19 @@ export default class Stage extends Vue {
           width: this.getScaledWidth(turretWidth),
           height: this.getScaledHeight(turretHeight),
           color: 'black',
-          isPlatform: false,
+          isPlatform: true,
           rateOfFire: 30,
+          burst: false
+        }),
+        new Turret({
+          name: 'bullet',
+          x: this.getScaledX(12),
+          y: this.getScaledY(100, this.getScaledHeight(turretHeight)),
+          width: this.getScaledWidth(turretWidth),
+          height: this.getScaledHeight(turretHeight),
+          color: 'black',
+          isPlatform: true,
+          rateOfFire: 100,
           burst: false
         })
       )
@@ -227,8 +238,8 @@ export default class Stage extends Vue {
           height: this.getScaledHeight(bulletHeight),
           color: 'black',
           isPlatform: false,
-          xSpeed: 5,
-          ySpeed: 0
+          xSpeed: 20,
+          ySpeed: 1
         })
       )
     }, (60 / turret.rateOfFire) * 1000)
