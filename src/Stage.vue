@@ -27,6 +27,7 @@ import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
 import { entities } from './level1Entities'
 import Entity, { IEntity } from './entity/Entity'
 import Bullet, { IBullet } from './entity/Bullet'
+import Turret, { ITurret } from './entity/Turret'
 
 import IFuel from './IFuel'
 import Animator from '@/Animator';
@@ -58,6 +59,8 @@ export default class Stage extends Vue {
   private bullets: Bullet[] = []
   private sounds: { [k: string]: Sound } = {}
 
+  private turrets: Turret[] = []
+
   private kopter = {
     width: 0,
     height: 0,
@@ -65,7 +68,7 @@ export default class Stage extends Vue {
     y: 0
   }
 
-  private kopterAnimator?: Animator;
+  private kopterAnimator?: Animator
 
   private drainFuel!: number
 
@@ -117,6 +120,10 @@ export default class Stage extends Vue {
       this.drawEntity(bullet, ctx)
     }
     this.updateGameArea(ctx)
+
+    for (const turret of this.turrets) {
+      this.createBullets(turret)
+    }
   }
 
   private getScaledX(x: number) {
@@ -138,11 +145,13 @@ export default class Stage extends Vue {
   private mounted() {
     // Device screen size
     this.canvas.style.width = window.innerWidth + 'px'
+    // this.canvas.style.width = window.innerHeight + 'px'
     this.canvas.style.height = window.innerHeight + 'px'
 
     // Below is the screensize to use, it includes DPS so that things do not blur
     const scale = window.devicePixelRatio
     this.canvasWidth = window.innerWidth * scale
+    // this.canvasWidth = window.innerHeight * scale
     this.canvasHeight = window.innerHeight * scale
 
     this.canvas.width = this.canvasWidth
@@ -171,7 +180,7 @@ export default class Stage extends Vue {
       width: kopterWidth,
       height: kopterHeight,
       x: this.entities[0].x,
-      y: this.entities[0].y - kopterHeight * 3
+      y: this.entities[0].y - kopterHeight * 1
     }
     this.curX = this.kopter.x
     this.curY = this.kopter.y
@@ -190,25 +199,90 @@ export default class Stage extends Vue {
     }
 
     // Percentage of the screen
-    const bulletHeight = 0.5
-    const bulletWidth = 0.5
+    const turretHeight = 6
+    const turretWidth = 3
 
-    for (let i = 0; i < 1000; i++) {
-      this.bullets.push(
-        new Bullet({
+    for (let i = 0; i < 1; i++) {
+      this.turrets.push(
+        new Turret({
           name: 'bullet',
-          x: this.getScaledX(10 - i),
-          y: this.getScaledY(78, this.getScaledHeight(bulletHeight)),
-          width: this.getScaledWidth(bulletWidth),
-          height: this.getScaledHeight(bulletHeight),
+          x: this.getScaledX(12),
+          y: this.getScaledY(30, this.getScaledHeight(turretHeight)),
+          width: this.getScaledWidth(turretWidth),
+          height: this.getScaledHeight(turretHeight),
           color: 'black',
-          isPlatform: false,
-          xSpeed: 8,
-          ySpeed: 0
+          isPlatform: true,
+          rateOfFire: 100,
+          burst: false
+        }),
+        new Turret({
+          name: 'bullet',
+          x: this.getScaledX(0),
+          y: this.getScaledY(94, this.getScaledHeight(turretHeight)),
+          width: this.getScaledWidth(turretWidth),
+          height: this.getScaledHeight(turretHeight),
+          color: 'black',
+          isPlatform: true,
+          rateOfFire: 100,
+          burst: false
+        }),
+        new Turret({
+          name: 'bullet',
+          x: this.getScaledX(97),
+          y: this.getScaledY(94, this.getScaledHeight(turretHeight)),
+          width: this.getScaledWidth(turretWidth),
+          height: this.getScaledHeight(turretHeight),
+          color: 'black',
+          isPlatform: true,
+          rateOfFire: 100,
+          burst: false
+        }),
+        new Turret({
+          name: 'bullet',
+          x: this.getScaledX(97),
+          y: this.getScaledY(6, this.getScaledHeight(turretHeight)),
+          width: this.getScaledWidth(turretWidth),
+          height: this.getScaledHeight(turretHeight),
+          color: 'black',
+          isPlatform: true,
+          rateOfFire: 100,
+          burst: false
         })
       )
     }
     this.start()
+  }
+
+  private createBullets(turret: ITurret) {
+    // Percentage of the screen
+    const bulletHeight = 0.5
+    const bulletWidth = 0.5
+
+    setInterval(() => {
+      const speed = 4
+      // calculate triangle between two objects. hypotenuse being the longest side
+      // this determines the factor between x and y for their respective speed values
+      const width = this.kopter.x + this.kopter.width / 2 - turret.x
+      const height = this.kopter.y + this.kopter.height / 2 - turret.y
+      const hypotenuse = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2))
+      const theCos = width / hypotenuse
+      const theSin = height / hypotenuse
+      const x = speed * theCos
+      const y = speed * theSin
+      this.bullets.push(
+        new Bullet({
+          name: 'bullet',
+          x: turret.x,
+          y: turret.y,
+          width: this.getScaledWidth(bulletWidth),
+          height: this.getScaledHeight(bulletHeight),
+          color: 'black',
+          isPlatform: false,
+          xSpeed: x,
+          ySpeed: -y
+        })
+      )
+    }, (60 / turret.rateOfFire) * 1000)
   }
 
   private update(ctx: CanvasRenderingContext2D) {
@@ -226,8 +300,21 @@ export default class Stage extends Vue {
       this.drawEntity(entity, ctx)
     }
     this.drawFuel(ctx)
-    for (const bullet of this.bullets) {
-      this.drawEntity(bullet, ctx)
+    for (let i = 0; i < this.bullets.length; i++) {
+      if (
+        this.bullets[i].x > this.canvasWidth ||
+        this.bullets[i].x < 0 ||
+        this.bullets[i].y > this.canvasHeight ||
+        this.bullets[i].y < 0
+      ) {
+        this.$delete(this.bullets, i)
+      } else {
+        this.drawEntity(this.bullets[i], ctx)
+      }
+    }
+
+    for (const turret of this.turrets) {
+      this.drawEntity(turret, ctx)
     }
   }
 
@@ -417,8 +504,11 @@ export default class Stage extends Vue {
     } else {
       if (this.fuel.current > 0) {
         this.gravityY = n
+        // this is for each click so  people cant exploit
+        this.fuel.current -= 1
         this.drainFuel = setInterval(() => {
           if (this.fuel.current > 0) {
+            // this is the rate at which fuel burns on touchhold
             this.fuel.current -= 2
           } else {
             console.log('OUT OF FUEL!')
@@ -451,8 +541,7 @@ export default class Stage extends Vue {
     if (this.kopterAnimator) {
       this.kopterAnimator.nextFrame(
         this.kopter as any,
-        this.direction === 'neutral' ? 0
-        : this.direction === 'left' ? 1 : 2
+        this.direction === 'neutral' ? 0 : this.direction === 'left' ? 1 : 2
       )
     }
   }
