@@ -139,11 +139,13 @@ export default class Stage extends Vue {
   private mounted() {
     // Device screen size
     this.canvas.style.width = window.innerWidth + 'px'
+    // this.canvas.style.width = window.innerHeight + 'px'
     this.canvas.style.height = window.innerHeight + 'px'
 
     // Below is the screensize to use, it includes DPS so that things do not blur
     const scale = window.devicePixelRatio
     this.canvasWidth = window.innerWidth * scale
+    // this.canvasWidth = window.innerHeight * scale
     this.canvasHeight = window.innerHeight * scale
 
     this.canvas.width = this.canvasWidth
@@ -204,13 +206,35 @@ export default class Stage extends Vue {
           height: this.getScaledHeight(turretHeight),
           color: 'black',
           isPlatform: true,
-          rateOfFire: 30,
+          rateOfFire: 100,
           burst: false
         }),
         new Turret({
           name: 'bullet',
-          x: this.getScaledX(12),
-          y: this.getScaledY(100, this.getScaledHeight(turretHeight)),
+          x: this.getScaledX(0),
+          y: this.getScaledY(94, this.getScaledHeight(turretHeight)),
+          width: this.getScaledWidth(turretWidth),
+          height: this.getScaledHeight(turretHeight),
+          color: 'black',
+          isPlatform: true,
+          rateOfFire: 100,
+          burst: false
+        }),
+        new Turret({
+          name: 'bullet',
+          x: this.getScaledX(97),
+          y: this.getScaledY(94, this.getScaledHeight(turretHeight)),
+          width: this.getScaledWidth(turretWidth),
+          height: this.getScaledHeight(turretHeight),
+          color: 'black',
+          isPlatform: true,
+          rateOfFire: 100,
+          burst: false
+        }),
+        new Turret({
+          name: 'bullet',
+          x: this.getScaledX(97),
+          y: this.getScaledY(6, this.getScaledHeight(turretHeight)),
           width: this.getScaledWidth(turretWidth),
           height: this.getScaledHeight(turretHeight),
           color: 'black',
@@ -229,14 +253,14 @@ export default class Stage extends Vue {
     const bulletWidth = 0.5
 
     setInterval(() => {
-      // GOOGLE "x y speed for angle"
-      // Screen ratio plays a factor, need to eliminate
-      // https://stackoverflow.com/questions/5192983/calculating-x-y-movement-based-on-rotation-angle
-      // The below actually makes fuckall sense, but ya
       const speed = 4
-      const angle = -0.3
-      const x = speed * Math.cos(angle)
-      const y = speed * Math.sin(angle)
+      const width = this.kopter.x + this.kopter.width / 2 - turret.x
+      const height = this.kopter.y + this.kopter.height / 2 - turret.y
+      const hypotenuse = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2))
+      const theCos = width / hypotenuse
+      const theSin = height / hypotenuse
+      const x = speed * theCos
+      const y = speed * theSin
       this.bullets.push(
         new Bullet({
           name: 'bullet',
