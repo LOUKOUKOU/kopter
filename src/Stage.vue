@@ -254,6 +254,8 @@ export default class Stage extends Vue {
 
     setInterval(() => {
       const speed = 4
+      // calculate triangle between two objects. hypotenuse being the longest side
+      // this determines the factor between x and y for their respective speed values
       const width = this.kopter.x + this.kopter.width / 2 - turret.x
       const height = this.kopter.y + this.kopter.height / 2 - turret.y
       const hypotenuse = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2))
