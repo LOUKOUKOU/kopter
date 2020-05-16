@@ -30,6 +30,7 @@ import Bullet, { IBullet } from './entity/Bullet'
 
 import IFuel from './IFuel'
 import Animator from '@/Animator';
+import Sound from '@/Sound';
 
 @Component
 export default class Stage extends Vue {
@@ -50,10 +51,12 @@ export default class Stage extends Vue {
   private touchType: string = ''
   private direction: string = 'neutral'
   private gameOver = false
+  private chopperSound = true
   private entities: Entity[] = []
   private canvasWidth: number = 0
   private canvasHeight: number = 0
   private bullets: Bullet[] = []
+  private sounds: { [k: string]: Sound } = {}
 
   private kopter = {
     width: 0,
@@ -102,6 +105,9 @@ export default class Stage extends Vue {
       this.$refs.kopter as HTMLImageElement,
       ctx
     )
+    const path = require('@/assets/sound/kopter.mp3');
+    this.sounds.kopter = new Sound(path, true)
+
     const rand = Math.random() * 100
     for (const entity of this.entities) {
       this.drawEntity(entity, ctx)
@@ -237,7 +243,7 @@ export default class Stage extends Vue {
     this.curY += this.ySpeed
     this.kopter.x = this.curX
     this.kopter.y = this.curY
-    for (let bullet of this.bullets) {
+    for (const bullet of this.bullets) {
       bullet.x += bullet.xSpeed
       bullet.y -= bullet.ySpeed
     }
@@ -398,6 +404,13 @@ export default class Stage extends Vue {
   }
 
   private accelerateY(n: number, touchType: string) {
+    if (touchType === 'start') {
+      this.sounds.kopter.play()
+    } else
+    if (touchType === 'end') {
+      this.sounds.kopter.pause()
+    }
+
     if (n > 0) {
       this.gravityY = n
       clearInterval(this.drainFuel)
