@@ -99,6 +99,7 @@ export default class Stage extends Vue {
     }
   }
 
+
   private start() {
     const ctx: any = this.canvas.getContext('2d')
     this.kopterAnimator = new Animator(
@@ -108,8 +109,15 @@ export default class Stage extends Vue {
       this.$refs.kopter as HTMLImageElement,
       ctx
     )
-    const path = require('@/assets/sound/kopter.mp3');
-    this.sounds.kopter = new Sound(path, true)
+
+    const path1 = require('@/assets/sound/kopter.mp3');
+    const path2 = require('@/assets/sound/kopter_up.mp3');
+    this.sounds.kopter = new Sound(path2, true)
+    this.sounds.kopter_idle = new Sound(path1, true)
+    
+    window.addEventListener('focus', () => this.sounds.kopter_idle.play());
+    window.addEventListener('load', () => this.sounds.kopter_idle.play());
+    window.addEventListener('blur', () => this.sounds.kopter_idle.pause());
 
     const rand = Math.random() * 100
     for (const entity of this.entities) {
@@ -483,6 +491,9 @@ export default class Stage extends Vue {
   private updateGameArea(ctx: CanvasRenderingContext2D): any {
     if (this.gameOver === false) {
       requestAnimationFrame(() => this.updateGameArea(ctx))
+    } else {
+      this.sounds.kopter_idle.pause()
+      this.sounds.kopter.pause()
     }
     this.clear(ctx)
     this.newPos()
@@ -492,9 +503,11 @@ export default class Stage extends Vue {
 
   private accelerateY(n: number, touchType: string) {
     if (touchType === 'start') {
+      this.sounds.kopter_idle.pause()
       this.sounds.kopter.play()
     } else
     if (touchType === 'end') {
+      this.sounds.kopter_idle.play()
       this.sounds.kopter.pause()
     }
 
