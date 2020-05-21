@@ -110,8 +110,8 @@ export default class Stage extends Vue {
       ctx
     )
 
-    const path1 = require('@/assets/sound/kopter.mp3');
-    const path2 = require('@/assets/sound/kopter_up.mp3');
+    const path1 = require('@/assets/sound/kopter.ogg');
+    const path2 = require('@/assets/sound/kopter_up.ogg');
     this.sounds.kopter = new Sound(path2, true)
     this.sounds.kopter_idle = new Sound(path1, true)
     
@@ -210,7 +210,7 @@ export default class Stage extends Vue {
     const turretHeight = 6
     const turretWidth = 3
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 0; i++) {
       this.turrets.push(
         new Turret({
           name: 'bullet',
