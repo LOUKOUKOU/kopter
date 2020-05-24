@@ -4,7 +4,7 @@ import Vue2TouchEvents from 'vue2-touch-events'
 
 Vue.config.productionTip = false;
 Vue.use(Vue2TouchEvents, {
-    disableClick: true,
+    disableClick: false,
     touchClass: '',
     tapTolerance: 0,
     touchHoldTolerance: 400,

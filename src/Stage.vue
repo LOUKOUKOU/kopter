@@ -2,6 +2,8 @@
   <main>
     <img ref="kopter" class="invis" :src="require('./assets/images/kopter.png')" />
     <img class="flag" :src="flag" />
+    <button id="pause" @click="handlePlayPaused">{{paused === true ? 'Play' : 'Pause'}}</button>
+    <button id="reset" v-if="gameOver === true" @click="init">Reset</button>
     <h2 v-if="gameOver === true" id="gameOver">GAME OVER</h2>
     <canvas ref="canvas"></canvas>
     <div id="dashboard">
@@ -30,8 +32,8 @@ import Bullet, { IBullet } from './entity/Bullet'
 import Turret, { ITurret } from './entity/Turret'
 
 import IFuel from './IFuel'
-import Animator from '@/Animator';
-import Sound from '@/Sound';
+import Animator from '@/Animator'
+import Sound from '@/Sound'
 
 @Component
 export default class Stage extends Vue {
@@ -47,11 +49,11 @@ export default class Stage extends Vue {
   private xSpeed: number = 0
   private gravityX: number = 0.0
   private bounceSpeedThreshold = 50
-  private interval: any = null
   private directionAnimationTimeout: any = null
   private touchType: string = ''
   private direction: string = 'neutral'
   private gameOver = false
+  private paused = false
   private chopperSound = true
   private entities: Entity[] = []
   private canvasWidth: number = 0
@@ -70,7 +72,8 @@ export default class Stage extends Vue {
 
   private kopterAnimator?: Animator
 
-  private drainFuel!: number
+  private drainFuelInterval!: number
+  private createBulletsInterval: number[] = []
 
   private fuel: IFuel = {
     x: 0,
@@ -99,74 +102,7 @@ export default class Stage extends Vue {
     }
   }
 
-
-  private start() {
-    const ctx: any = this.canvas.getContext('2d')
-    this.kopterAnimator = new Animator(
-      230,
-      120,
-      6,
-      this.$refs.kopter as HTMLImageElement,
-      ctx
-    )
-
-    const path1 = require('@/assets/sound/kopter.ogg');
-    const path2 = require('@/assets/sound/kopter_up.ogg');
-    const cannonPath = require('@/assets/sound/cannon.ogg');
-    this.sounds.kopter = new Sound(path2, true, false, 0.3)
-    this.sounds.kopter_idle = new Sound(path1, true, false, 0.2)
-    this.sounds.cannon = new Sound(cannonPath, false, false, 0.4)
-    
-    window.addEventListener('focus', () => this.sounds.kopter_idle.play());
-    window.addEventListener('load', () => this.sounds.kopter_idle.play());
-    window.addEventListener('blur', () => this.sounds.kopter_idle.pause());
-
-    const rand = Math.random() * 100
-    for (const entity of this.entities) {
-      this.drawEntity(entity, ctx)
-    }
-    this.drawFuel(ctx)
-    for (const bullet of this.bullets) {
-      this.drawEntity(bullet, ctx)
-    }
-    this.updateGameArea(ctx)
-
-    for (const turret of this.turrets) {
-      this.createBullets(turret)
-    }
-  }
-
-  private getScaledX(x: number) {
-    return (x / 100) * this.canvasWidth
-  }
-
-  private getScaledWidth(width: number) {
-    return (width / 100) * this.canvasWidth
-  }
-
-  private getScaledY(y: number, scaledHeight: number) {
-    return (y / 100) * this.canvasHeight - scaledHeight
-  }
-
-  private getScaledHeight(height: number) {
-    return (height / 100) * this.canvasHeight
-  }
-
-  private mounted() {
-    // Device screen size
-    this.canvas.style.width = window.innerWidth + 'px'
-    // this.canvas.style.width = window.innerHeight + 'px'
-    this.canvas.style.height = window.innerHeight + 'px'
-
-    // Below is the screensize to use, it includes DPS so that things do not blur
-    const scale = window.devicePixelRatio
-    this.canvasWidth = window.innerWidth * scale
-    // this.canvasWidth = window.innerHeight * scale
-    this.canvasHeight = window.innerHeight * scale
-
-    this.canvas.width = this.canvasWidth
-    this.canvas.height = this.canvasHeight
-
+  initialiseEntities() {
     for (const entity of entities) {
       const theHeight = this.getScaledHeight(entity.height)
       const data: IEntity = {
@@ -224,7 +160,7 @@ export default class Stage extends Vue {
           isPlatform: true,
           rateOfFire: 100,
           burst: false
-        }),
+        })
         // new Turret({
         //   name: 'bullet',
         //   x: this.getScaledX(0),
@@ -260,7 +196,85 @@ export default class Stage extends Vue {
         // })
       )
     }
-    this.start()
+
+    for (const turret of this.turrets) {
+      this.createBullets(turret)
+    }
+  }
+
+  private init() {
+    this.gameOver = false
+    this.bullets = []
+    this.ySpeed = 0
+    this.xSpeed = 0
+    this.gravityY = 0.05
+    this.gravityX = 0
+    this.turrets = []
+
+    this.initialiseEntities()
+    const ctx: any = this.canvas.getContext('2d')
+    this.kopterAnimator = new Animator(
+      230,
+      120,
+      6,
+      this.$refs.kopter as HTMLImageElement,
+      ctx
+    )
+
+    const path1 = require('@/assets/sound/kopter.ogg')
+    const path2 = require('@/assets/sound/kopter_up.ogg')
+    const cannonPath = require('@/assets/sound/cannon.ogg')
+    this.sounds.kopter = new Sound(path2, true, false, 0.3)
+    this.sounds.kopter_idle = new Sound(path1, true, false, 0.2)
+    this.sounds.cannon = new Sound(cannonPath, false, false, 0.4)
+
+    window.addEventListener('focus', () => this.sounds.kopter_idle.play())
+    window.addEventListener('load', () => this.sounds.kopter_idle.play())
+    window.addEventListener('blur', () => this.sounds.kopter_idle.pause())
+
+    const rand = Math.random() * 100
+    for (const entity of this.entities) {
+      this.drawEntity(entity, ctx)
+    }
+    this.drawFuel(ctx)
+    for (const bullet of this.bullets) {
+      this.drawEntity(bullet, ctx)
+    }
+    this.updateGameArea(ctx)
+  }
+
+  private getScaledX(x: number) {
+    return (x / 100) * this.canvasWidth
+  }
+
+  private getScaledWidth(width: number) {
+    return (width / 100) * this.canvasWidth
+  }
+
+  private getScaledY(y: number, scaledHeight: number) {
+    return (y / 100) * this.canvasHeight - scaledHeight
+  }
+
+  private getScaledHeight(height: number) {
+    return (height / 100) * this.canvasHeight
+  }
+
+  private mounted() {
+    // Device screen size
+    this.canvas.style.width = window.innerWidth + 'px'
+    // this.canvas.style.width = window.innerHeight + 'px'
+    this.canvas.style.height = window.innerHeight + 'px'
+
+    // Below is the screensize to use, it includes DPS so that things do not blur
+    const scale = window.devicePixelRatio
+    this.canvasWidth = window.innerWidth * scale
+    // this.canvasWidth = window.innerHeight * scale
+    this.canvasHeight = window.innerHeight * scale
+
+    this.canvas.width = this.canvasWidth
+    this.canvas.height = this.canvasHeight
+
+    this.init()
   }
 
   private createBullets(turret: ITurret) {
@@ -268,7 +282,7 @@ export default class Stage extends Vue {
     const bulletHeight = 0.5
     const bulletWidth = 0.5
 
-    setInterval(() => {
+    const bulletInterval = setInterval(() => {
       const speed = 4
       // calculate triangle between two objects. hypotenuse being the longest side
       // this determines the factor between x and y for their respective speed values
@@ -294,6 +308,8 @@ export default class Stage extends Vue {
       )
       this.sounds.cannon.play()
     }, (60 / turret.rateOfFire) * 1000)
+
+    this.createBulletsInterval.push(bulletInterval)
   }
 
   private update(ctx: CanvasRenderingContext2D) {
@@ -406,6 +422,10 @@ export default class Stage extends Vue {
     }
   }
 
+  handlePlayPaused() {
+    this.paused = !this.paused
+  }
+
   private hitBoundaries() {
     const rockbottom = this.canvas.height - this.kopter.height
 
@@ -495,6 +515,10 @@ export default class Stage extends Vue {
     if (this.gameOver === false) {
       requestAnimationFrame(() => this.updateGameArea(ctx))
     } else {
+      clearInterval(this.drainFuelInterval)
+      for (const bulletInterval of this.createBulletsInterval) {
+        clearInterval(bulletInterval)
+      }
       this.sounds.kopter_idle.pause()
       this.sounds.kopter.pause()
     }
@@ -508,28 +532,27 @@ export default class Stage extends Vue {
     if (touchType === 'start') {
       this.sounds.kopter_idle.pause()
       this.sounds.kopter.play()
-    } else
-    if (touchType === 'end') {
+    } else if (touchType === 'end') {
       this.sounds.kopter_idle.play()
       this.sounds.kopter.pause()
     }
 
     if (n > 0) {
       this.gravityY = n
-      clearInterval(this.drainFuel)
+      clearInterval(this.drainFuelInterval)
     } else {
       if (this.fuel.current > 0) {
         this.gravityY = n
         // this is for each click so  people cant exploit
         this.fuel.current -= 1
-        this.drainFuel = setInterval(() => {
+        this.drainFuelInterval = setInterval(() => {
           if (this.fuel.current > 0) {
             // this is the rate at which fuel burns on touchhold
             this.fuel.current -= 2
           } else {
             console.log('OUT OF FUEL!')
             this.gravityY = 0 - this.gravityY
-            clearInterval(this.drainFuel)
+            clearInterval(this.drainFuelInterval)
           }
         }, 200)
       } else {
@@ -576,10 +599,6 @@ export default class Stage extends Vue {
     const newWidth = (this.fuel.current / this.fuel.total) * this.fuel.width
     ctx.fillStyle = 'orange'
     ctx.fillRect(this.fuel.x, this.fuel.y, newWidth, this.fuel.height)
-  }
-
-  private stop() {
-    clearInterval(this.interval)
   }
 
   private clear(ctx: CanvasRenderingContext2D) {
@@ -667,6 +686,22 @@ canvas {
 button {
   opacity: 0;
   width: 20%;
+}
+
+#pause {
+  position: fixed;
+  top: 2%;
+  right: 20%;
+  z-index: 1;
+  opacity: 1;
+}
+
+#reset {
+  position: fixed;
+  top: 2%;
+  right: 42%;
+  z-index: 1;
+  opacity: 1;
 }
 
 button.exel {
