@@ -15,7 +15,7 @@ export default class Sound {
     this.playOnce = playOnce
     this.audioObject = new Howl({
       loop: this.loop,
-      volume: volume,
+      volume,
       src: [this.src]
     })
   }

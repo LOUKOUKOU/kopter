@@ -1,6 +1,7 @@
 <template>
   <main>
     <img ref="kopter" class="invis" :src="require('./assets/images/kopter.png')" />
+    <img ref="texture_building" width="30px" height="30px" class="invis" :src="require('./assets/images/texture_building.png')" />
     <img class="flag" :src="flag" />
     <h2 v-if="gameOver === true" id="gameOver">GAME OVER</h2>
     <canvas ref="canvas"></canvas>
@@ -116,14 +117,18 @@ export default class Stage extends Vue {
     this.sounds.kopter = new Sound(path2, true, false, 0.3)
     this.sounds.kopter_idle = new Sound(path1, true, false, 0.2)
     this.sounds.cannon = new Sound(cannonPath, false, false, 0.4)
-    
+
     window.addEventListener('focus', () => this.sounds.kopter_idle.play());
     window.addEventListener('load', () => this.sounds.kopter_idle.play());
     window.addEventListener('blur', () => this.sounds.kopter_idle.pause());
 
     const rand = Math.random() * 100
     for (const entity of this.entities) {
-      this.drawEntity(entity, ctx)
+      if (entity.texture) {
+        this.drawEntityWithTexture(entity, ctx)
+      } else {
+        this.drawEntity(entity, ctx)
+      }
     }
     this.drawFuel(ctx)
     for (const bullet of this.bullets) {
@@ -176,7 +181,8 @@ export default class Stage extends Vue {
         height: theHeight,
         name: entity.name,
         color: entity.color,
-        isPlatform: entity.isPlatform
+        isPlatform: entity.isPlatform,
+        texture: entity.texture
       }
 
       this.entities.push(new Entity(data))
@@ -308,7 +314,11 @@ export default class Stage extends Vue {
 
     this.drawKopter(ctx)
     for (const entity of this.entities) {
-      this.drawEntity(entity, ctx)
+      if (entity.texture) {
+        this.drawEntityWithTexture(entity, ctx)
+      } else {
+        this.drawEntity(entity, ctx)
+      }
     }
     this.drawFuel(ctx)
     for (let i = 0; i < this.bullets.length; i++) {
@@ -565,6 +575,12 @@ export default class Stage extends Vue {
   private drawEntity(entity: IEntity, ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = entity.color
     ctx.fillRect(entity.x, entity.y, entity.width, entity.height)
+  }
+
+  private drawEntityWithTexture(entity: IEntity, ctx: CanvasRenderingContext2D) {
+    ctx.rect(entity.x, entity.y, entity.width, entity.height)
+    ctx.fillStyle = ctx.createPattern(this.$refs[entity.texture ? entity.texture : 'blank'] as HTMLImageElement, 'repeat')
+    ctx.fill()
   }
 
   private drawBullet(bullet: IBullet, ctx: CanvasRenderingContext2D) {
