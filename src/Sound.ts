@@ -9,12 +9,13 @@ export default class Sound {
   private timesPlayed: number = 0;
   private src: string;
 
-  public constructor(src: string, loop: boolean, playOnce = true) {
+  public constructor(src: string, loop: boolean, playOnce = true, volume = 1.0) {
     this.src = src
     this.loop = loop
     this.playOnce = playOnce
     this.audioObject = new Howl({
       loop: this.loop,
+      volume: volume,
       src: [this.src]
     })
   }

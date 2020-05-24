@@ -112,8 +112,10 @@ export default class Stage extends Vue {
 
     const path1 = require('@/assets/sound/kopter.ogg');
     const path2 = require('@/assets/sound/kopter_up.ogg');
-    this.sounds.kopter = new Sound(path2, true)
-    this.sounds.kopter_idle = new Sound(path1, true)
+    const cannonPath = require('@/assets/sound/cannon.ogg');
+    this.sounds.kopter = new Sound(path2, true, false, 0.3)
+    this.sounds.kopter_idle = new Sound(path1, true, false, 0.2)
+    this.sounds.cannon = new Sound(cannonPath, false, false, 0.4)
     
     window.addEventListener('focus', () => this.sounds.kopter_idle.play());
     window.addEventListener('load', () => this.sounds.kopter_idle.play());
@@ -210,7 +212,7 @@ export default class Stage extends Vue {
     const turretHeight = 6
     const turretWidth = 3
 
-    for (let i = 0; i < 0; i++) {
+    for (let i = 0; i < 1; i++) {
       this.turrets.push(
         new Turret({
           name: 'bullet',
@@ -223,39 +225,39 @@ export default class Stage extends Vue {
           rateOfFire: 100,
           burst: false
         }),
-        new Turret({
-          name: 'bullet',
-          x: this.getScaledX(0),
-          y: this.getScaledY(94, this.getScaledHeight(turretHeight)),
-          width: this.getScaledWidth(turretWidth),
-          height: this.getScaledHeight(turretHeight),
-          color: 'black',
-          isPlatform: true,
-          rateOfFire: 100,
-          burst: false
-        }),
-        new Turret({
-          name: 'bullet',
-          x: this.getScaledX(97),
-          y: this.getScaledY(94, this.getScaledHeight(turretHeight)),
-          width: this.getScaledWidth(turretWidth),
-          height: this.getScaledHeight(turretHeight),
-          color: 'black',
-          isPlatform: true,
-          rateOfFire: 100,
-          burst: false
-        }),
-        new Turret({
-          name: 'bullet',
-          x: this.getScaledX(97),
-          y: this.getScaledY(6, this.getScaledHeight(turretHeight)),
-          width: this.getScaledWidth(turretWidth),
-          height: this.getScaledHeight(turretHeight),
-          color: 'black',
-          isPlatform: true,
-          rateOfFire: 100,
-          burst: false
-        })
+        // new Turret({
+        //   name: 'bullet',
+        //   x: this.getScaledX(0),
+        //   y: this.getScaledY(94, this.getScaledHeight(turretHeight)),
+        //   width: this.getScaledWidth(turretWidth),
+        //   height: this.getScaledHeight(turretHeight),
+        //   color: 'black',
+        //   isPlatform: true,
+        //   rateOfFire: 100,
+        //   burst: false
+        // }),
+        // new Turret({
+        //   name: 'bullet',
+        //   x: this.getScaledX(97),
+        //   y: this.getScaledY(94, this.getScaledHeight(turretHeight)),
+        //   width: this.getScaledWidth(turretWidth),
+        //   height: this.getScaledHeight(turretHeight),
+        //   color: 'black',
+        //   isPlatform: true,
+        //   rateOfFire: 100,
+        //   burst: false
+        // }),
+        // new Turret({
+        //   name: 'bullet',
+        //   x: this.getScaledX(97),
+        //   y: this.getScaledY(6, this.getScaledHeight(turretHeight)),
+        //   width: this.getScaledWidth(turretWidth),
+        //   height: this.getScaledHeight(turretHeight),
+        //   color: 'black',
+        //   isPlatform: true,
+        //   rateOfFire: 100,
+        //   burst: false
+        // })
       )
     }
     this.start()
@@ -290,6 +292,7 @@ export default class Stage extends Vue {
           ySpeed: -y
         })
       )
+      this.sounds.cannon.play()
     }, (60 / turret.rateOfFire) * 1000)
   }
 
