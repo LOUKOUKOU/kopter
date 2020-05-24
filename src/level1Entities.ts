@@ -9,7 +9,8 @@ export const entities: IEntity[] = [
         width: 10,
         height: 20,
         color: 'red',
-        isPlatform: true
+        isPlatform: true,
+        texture: 'texture_building'
     },
     {
         name: 'skyscraper2',
@@ -18,6 +19,7 @@ export const entities: IEntity[] = [
         width: 10,
         height: 20,
         color: 'blue',
-        isPlatform: false
+        isPlatform: false,
+        texture: 'texture_building'
     }
 ]

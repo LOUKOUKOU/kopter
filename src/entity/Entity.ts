@@ -7,6 +7,7 @@ export default class Entity implements IEntity {
     public height: number;
     public color: string;
     public isPlatform: boolean;
+    public texture?: string;
 
     public constructor(data: IEntity) {
         this.name = data.name;
@@ -16,6 +17,7 @@ export default class Entity implements IEntity {
         this.height = data.height;
         this.color = data.color;
         this.isPlatform = data.isPlatform;
+        this.texture = data.texture;
     }
 }
 
@@ -27,4 +29,5 @@ export interface IEntity {
     height: number;
     color: string;
     isPlatform: boolean;
+    texture?: string;
 }
