@@ -203,14 +203,7 @@ export default class Stage extends Vue {
   }
 
   private init() {
-    this.gameOver = false
-    this.bullets = []
-    this.ySpeed = 0
-    this.xSpeed = 0
-    this.gravityY = 0.05
-    this.gravityX = 0
-    this.turrets = []
-
+    this.reset()
     this.initialiseEntities()
     const ctx: any = this.canvas.getContext('2d')
     this.kopterAnimator = new Animator(
@@ -511,14 +504,28 @@ export default class Stage extends Vue {
     }
   }
 
+  private reset() {
+    this.gameOver = false
+    this.bullets = []
+    this.ySpeed = 0
+    this.xSpeed = 0
+    this.gravityY = 0.05
+    this.gravityX = 0
+    this.turrets = []
+  }
+
+  private handleGameOver() {
+    clearInterval(this.drainFuelInterval)
+    for (const bulletInterval of this.createBulletsInterval) {
+      clearInterval(bulletInterval)
+    }
+  }
+
   private updateGameArea(ctx: CanvasRenderingContext2D): any {
     if (this.gameOver === false) {
       requestAnimationFrame(() => this.updateGameArea(ctx))
     } else {
-      clearInterval(this.drainFuelInterval)
-      for (const bulletInterval of this.createBulletsInterval) {
-        clearInterval(bulletInterval)
-      }
+      this.handleGameOver()
       this.sounds.kopter_idle.pause()
       this.sounds.kopter.pause()
     }
@@ -529,51 +536,55 @@ export default class Stage extends Vue {
   }
 
   private accelerateY(n: number, touchType: string) {
-    if (touchType === 'start') {
-      this.sounds.kopter_idle.pause()
-      this.sounds.kopter.play()
-    } else if (touchType === 'end') {
-      this.sounds.kopter_idle.play()
-      this.sounds.kopter.pause()
-    }
+    if (this.gameOver === false) {
+      if (touchType === 'start') {
+        this.sounds.kopter_idle.pause()
+        this.sounds.kopter.play()
+      } else if (touchType === 'end') {
+        this.sounds.kopter_idle.play()
+        this.sounds.kopter.pause()
+      }
 
-    if (n > 0) {
-      this.gravityY = n
-      clearInterval(this.drainFuelInterval)
-    } else {
-      if (this.fuel.current > 0) {
+      if (n > 0) {
         this.gravityY = n
-        // this is for each click so  people cant exploit
-        this.fuel.current -= 1
-        this.drainFuelInterval = setInterval(() => {
-          if (this.fuel.current > 0) {
-            // this is the rate at which fuel burns on touchhold
-            this.fuel.current -= 2
-          } else {
-            console.log('OUT OF FUEL!')
-            this.gravityY = 0 - this.gravityY
-            clearInterval(this.drainFuelInterval)
-          }
-        }, 200)
+        clearInterval(this.drainFuelInterval)
       } else {
-        console.log('OUT OF FUEL!')
+        if (this.fuel.current > 0) {
+          this.gravityY = n
+          // this is for each click so  people cant exploit
+          this.fuel.current -= 1
+          this.drainFuelInterval = setInterval(() => {
+            if (this.fuel.current > 0) {
+              // this is the rate at which fuel burns on touchhold
+              this.fuel.current -= 2
+            } else {
+              console.log('OUT OF FUEL!')
+              this.gravityY = 0 - this.gravityY
+              clearInterval(this.drainFuelInterval)
+            }
+          }, 200)
+        } else {
+          console.log('OUT OF FUEL!')
+        }
       }
     }
   }
 
   private accelerateX(n: number, type: string) {
-    if (
-      this.gravityX + n <= this.maxSpeedX &&
-      this.gravityX + n >= -this.maxSpeedX
-    ) {
-      this.gravityX = this.gravityX + n
-    }
+    if (this.gameOver === false) {
+      if (
+        this.gravityX + n <= this.maxSpeedX &&
+        this.gravityX + n >= -this.maxSpeedX
+      ) {
+        this.gravityX = this.gravityX + n
+      }
 
-    this.direction = type
-    this.directionAnimationTimeout = setTimeout(() => {
-      this.direction = 'neutral'
-      clearTimeout(this.directionAnimationTimeout)
-    }, 500)
+      this.direction = type
+      this.directionAnimationTimeout = setTimeout(() => {
+        this.direction = 'neutral'
+        clearTimeout(this.directionAnimationTimeout)
+      }, 500)
+    }
   }
 
   private drawKopter(ctx: CanvasRenderingContext2D) {
