@@ -330,7 +330,7 @@ export default class Stage extends Vue {
     this.drawKopter(ctx)
     for (const entity of this.entities) {
       if (entity.texture) {
-        // this.drawEntityWithTexture(entity, ctx)
+        this.drawEntityWithTexture(entity, ctx)
       } else {
         this.drawEntity(entity, ctx)
       }
@@ -539,16 +539,16 @@ export default class Stage extends Vue {
 
   private updateGameArea(ctx: CanvasRenderingContext2D): any {
     if (this.gameOver === false) {
+      this.clear(ctx)
+      this.newPos()
+
+      this.update(ctx)
       requestAnimationFrame(() => this.updateGameArea(ctx))
     } else {
       this.handleGameOver()
       this.sounds.kopter_idle.pause()
       this.sounds.kopter.pause()
     }
-    this.clear(ctx)
-    this.newPos()
-
-    this.update(ctx)
   }
 
   private accelerateY(n: number, touchType: string) {
@@ -621,12 +621,11 @@ export default class Stage extends Vue {
     entity: IEntity,
     ctx: CanvasRenderingContext2D
   ) {
-    ctx.rect(entity.x, entity.y, entity.width, entity.height)
     ctx.fillStyle = ctx.createPattern(
       this.$refs[entity.texture ? entity.texture : 'blank'] as HTMLImageElement,
       'repeat'
     ) as CanvasPattern
-    ctx.fill()
+    ctx.fillRect(entity.x, entity.y, entity.width, entity.height)
   }
 
   private drawBullet(bullet: IBullet, ctx: CanvasRenderingContext2D) {
