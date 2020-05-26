@@ -33,7 +33,7 @@
 
 <script lang="ts">
 import { Component, Vue, Watch, Prop } from 'vue-property-decorator'
-import { entities } from './level1Entities'
+import { level1Config } from './level1Config'
 import Entity, { IEntity } from './entity/Entity'
 import Bullet, { IBullet } from './entity/Bullet'
 import Turret, { ITurret } from './entity/Turret'
@@ -41,6 +41,7 @@ import Turret, { ITurret } from './entity/Turret'
 import IFuel from './IFuel'
 import Animator from '@/Animator'
 import Sound from '@/Sound'
+import { ScaledValues } from './utils/ScaledValues'
 
 @Component
 export default class Stage extends Vue {
@@ -62,12 +63,10 @@ export default class Stage extends Vue {
   private gameOver = false
   private paused = false
   private chopperSound = true
-  private entities: Entity[] = []
-  private canvasWidth: number = 0
-  private canvasHeight: number = 0
+  private platforms: Entity[] = []
   private bullets: Bullet[] = []
   private sounds: { [k: string]: Sound } = {}
-
+  private scaledValues = new ScaledValues(0, 0)
   private turrets: Turret[] = []
 
   private kopter = {
@@ -110,31 +109,31 @@ export default class Stage extends Vue {
   }
 
   initialiseEntities() {
-    for (const entity of entities) {
-      const theHeight = this.getScaledHeight(entity.height)
+    for (const platform of level1Config.platforms) {
+      const theHeight = this.scaledValues.getHeight(platform.height)
       const data: IEntity = {
-        x: this.getScaledX(entity.x),
-        y: this.getScaledY(entity.y, theHeight),
-        width: this.getScaledX(entity.width),
+        x: this.scaledValues.getX(platform.x),
+        y: this.scaledValues.getY(platform.y, theHeight),
+        width: this.scaledValues.getX(platform.width),
         height: theHeight,
-        name: entity.name,
-        color: entity.color,
-        isPlatform: entity.isPlatform,
-        texture: entity.texture
+        name: platform.name,
+        color: platform.color,
+        isPlatform: platform.isPlatform,
+        texture: platform.texture
       }
 
-      this.entities.push(new Entity(data))
+      this.platforms.push(new Entity(data))
     }
 
-    const kopterWidth = this.canvasWidth / 12
-    const kopterHeight = this.canvasWidth / 23
+    const kopterWidth = this.scaledValues.canvasWidth / 12
+    const kopterHeight = this.scaledValues.canvasWidth / 23
 
     // placing kopter ontop of first skyscraper
     this.kopter = {
       width: kopterWidth,
       height: kopterHeight,
-      x: this.entities[0].x,
-      y: this.entities[0].y - kopterHeight * 1
+      x: this.platforms[0].x,
+      y: this.platforms[0].y - kopterHeight * 1
     }
     this.curX = this.kopter.x
     this.curY = this.kopter.y
@@ -144,64 +143,30 @@ export default class Stage extends Vue {
     const fuelHeight = 2
 
     this.fuel = {
-      x: this.getScaledX(10),
-      y: this.getScaledY(10, this.getScaledHeight(fuelHeight)),
-      width: this.getScaledWidth(25),
-      height: this.getScaledHeight(fuelHeight),
+      x: this.scaledValues.getX(10),
+      y: this.scaledValues.getY(10, this.scaledValues.getHeight(fuelHeight)),
+      width: this.scaledValues.getWidth(25),
+      height: this.scaledValues.getHeight(fuelHeight),
       total: totalFuel,
       current: totalFuel
     }
 
-    // Percentage of the screen
-    const turretHeight = 6
-    const turretWidth = 3
-
-    for (let i = 0; i < 1; i++) {
+    for (const turret of level1Config.turrets) {
       this.turrets.push(
         new Turret({
-          name: 'bullet',
-          x: this.getScaledX(12),
-          y: this.getScaledY(30, this.getScaledHeight(turretHeight)),
-          width: this.getScaledWidth(turretWidth),
-          height: this.getScaledHeight(turretHeight),
-          color: 'black',
-          isPlatform: true,
-          rateOfFire: 100,
-          burst: false
+          name: turret.name,
+          x: this.scaledValues.getX(turret.x),
+          y: this.scaledValues.getY(
+            turret.y,
+            this.scaledValues.getHeight(turret.height)
+          ),
+          width: this.scaledValues.getWidth(turret.width),
+          height: this.scaledValues.getHeight(turret.height),
+          color: turret.color,
+          isPlatform: turret.isPlatform,
+          rateOfFire: turret.rateOfFire,
+          burst: turret.burst
         })
-        // new Turret({
-        //   name: 'bullet',
-        //   x: this.getScaledX(0),
-        //   y: this.getScaledY(94, this.getScaledHeight(turretHeight)),
-        //   width: this.getScaledWidth(turretWidth),
-        //   height: this.getScaledHeight(turretHeight),
-        //   color: 'black',
-        //   isPlatform: true,
-        //   rateOfFire: 100,
-        //   burst: false
-        // }),
-        // new Turret({
-        //   name: 'bullet',
-        //   x: this.getScaledX(97),
-        //   y: this.getScaledY(94, this.getScaledHeight(turretHeight)),
-        //   width: this.getScaledWidth(turretWidth),
-        //   height: this.getScaledHeight(turretHeight),
-        //   color: 'black',
-        //   isPlatform: true,
-        //   rateOfFire: 100,
-        //   burst: false
-        // }),
-        // new Turret({
-        //   name: 'bullet',
-        //   x: this.getScaledX(97),
-        //   y: this.getScaledY(6, this.getScaledHeight(turretHeight)),
-        //   width: this.getScaledWidth(turretWidth),
-        //   height: this.getScaledHeight(turretHeight),
-        //   color: 'black',
-        //   isPlatform: true,
-        //   rateOfFire: 100,
-        //   burst: false
-        // })
       )
     }
 
@@ -234,7 +199,7 @@ export default class Stage extends Vue {
     window.addEventListener('blur', () => this.sounds.kopter_idle.pause())
 
     const rand = Math.random() * 100
-    for (const entity of this.entities) {
+    for (const entity of this.platforms) {
       if (entity.texture) {
         this.drawEntityWithTexture(entity, ctx)
       } else {
@@ -248,22 +213,6 @@ export default class Stage extends Vue {
     this.updateGameArea(ctx)
   }
 
-  private getScaledX(x: number) {
-    return (x / 100) * this.canvasWidth
-  }
-
-  private getScaledWidth(width: number) {
-    return (width / 100) * this.canvasWidth
-  }
-
-  private getScaledY(y: number, scaledHeight: number) {
-    return (y / 100) * this.canvasHeight - scaledHeight
-  }
-
-  private getScaledHeight(height: number) {
-    return (height / 100) * this.canvasHeight
-  }
-
   private mounted() {
     // Device screen size
     this.canvas.style.width = window.innerWidth + 'px'
@@ -272,12 +221,12 @@ export default class Stage extends Vue {
 
     // Below is the screensize to use, it includes DPS so that things do not blur
     const scale = window.devicePixelRatio
-    this.canvasWidth = window.innerWidth * scale
+    this.scaledValues.canvasWidth = window.innerWidth * scale
     // this.canvasWidth = window.innerHeight * scale
-    this.canvasHeight = window.innerHeight * scale
+    this.scaledValues.canvasHeight = window.innerHeight * scale
 
-    this.canvas.width = this.canvasWidth
-    this.canvas.height = this.canvasHeight
+    this.canvas.width = this.scaledValues.canvasWidth
+    this.canvas.height = this.scaledValues.canvasHeight
 
     this.init()
   }
@@ -303,8 +252,8 @@ export default class Stage extends Vue {
           name: 'bullet',
           x: turret.x,
           y: turret.y,
-          width: this.getScaledWidth(bulletWidth),
-          height: this.getScaledHeight(bulletHeight),
+          width: this.scaledValues.getWidth(bulletWidth),
+          height: this.scaledValues.getHeight(bulletHeight),
           color: 'black',
           isPlatform: false,
           xSpeed: x,
@@ -328,7 +277,7 @@ export default class Stage extends Vue {
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
     this.drawKopter(ctx)
-    for (const entity of this.entities) {
+    for (const entity of this.platforms) {
       if (entity.texture) {
         this.drawEntityWithTexture(entity, ctx)
       } else {
@@ -338,9 +287,9 @@ export default class Stage extends Vue {
     this.drawFuel(ctx)
     for (let i = 0; i < this.bullets.length; i++) {
       if (
-        this.bullets[i].x > this.canvasWidth ||
+        this.bullets[i].x > this.scaledValues.canvasWidth ||
         this.bullets[i].x < 0 ||
-        this.bullets[i].y > this.canvasHeight ||
+        this.bullets[i].y > this.scaledValues.canvasHeight ||
         this.bullets[i].y < 0
       ) {
         this.$delete(this.bullets, i)
@@ -440,7 +389,7 @@ export default class Stage extends Vue {
 
     let onSurface: boolean = false
     // stop if hit bottom or platform surface
-    for (const entity of this.entities) {
+    for (const entity of this.platforms) {
       if (this.isTouchingEntity(this.curX, this.curY, entity)) {
         this.curY = entity.y - this.kopter.height
         this.ySpeed = 0
