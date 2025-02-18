@@ -48,11 +48,11 @@
 
 <script lang="ts" setup>
 import { level1Config } from '@/level1Config'
-import Entity, { IEntity } from '@/entity/Entity'
-import Bullet, { IBullet } from '@/entity/Bullet'
-import Turret, { ITurret } from '@/entity/Turret'
+import Entity, { type IEntity } from '@/entity/Entity'
+import Bullet, { type IBullet } from '@/entity/Bullet'
+import Turret, { type ITurret } from '@/entity/Turret'
 
-import IFuel from '@/IFuel'
+import type IFuel from '@/IFuel'
 import Animator from '@/Animator'
 // import Sound from '@/Sound'
 import { ScaledValues } from '@/utils/ScaledValues'
@@ -87,8 +87,8 @@ const scaledValues = new ScaledValues(0, 0)
 
 let kopterAnimator: Animator
 
-let drainFuelInterval!: NodeJS.Timeout
-const createBulletsInterval: NodeJS.Timeout[] = []
+let drainFuelInterval!: any
+const createBulletsInterval: any[] = []
 
 const fuel: IFuel = {
   x: 0,
@@ -99,9 +99,9 @@ const fuel: IFuel = {
   current: 0,
 }
 
-const canvas: Ref<HTMLCanvasElement> = ref(null)
-const kopterElement: Ref<HTMLImageElement> = ref(null)
-const platformElement: Ref<HTMLImageElement> = ref(null)
+const canvas: Ref<HTMLCanvasElement | null> = ref(null)
+const kopterElement: Ref<HTMLImageElement | null> = ref(null)
+const platformElement: Ref<HTMLImageElement | null> = ref(null)
 const kopterAttributes = reactive({
   width: 0,
   height: 0,
@@ -148,7 +148,8 @@ function initialiseEntities() {
   fuel.total = totalFuel
   fuel.current = totalFuel
 
-  for (const turret of level1Config.turrets) {
+  for (const t of level1Config.turrets) {
+    const turret = t as ITurret
     turrets.push(
       new Turret({
         name: turret.name,
@@ -172,50 +173,52 @@ function initialiseEntities() {
 function init() {
   reset()
   initialiseEntities()
-  const ctx: any = canvas.value.getContext('2d')
-  kopterAnimator = new Animator(230, 120, 6, kopterElement.value as HTMLImageElement, ctx)
+  if (canvas.value) {
+    const ctx: any = canvas.value.getContext('2d')
+    kopterAnimator = new Animator(230, 120, 6, kopterElement.value as HTMLImageElement, ctx)
 
-  // const path1 = require('@/assets/sound/kopter.ogg')
-  // const path2 = require('@/assets/sound/kopter_up.ogg')
-  // const cannonPath = require('@/assets/sound/cannon.ogg')
-  // sounds.kopter = new Sound(path2, true, false, 0.3)
-  // sounds.kopter_idle = new Sound(path1, true, false, 0.2)
-  // sounds.cannon = new Sound(cannonPath, false, false, 0.4)
+    // const path1 = require('@/assets/sound/kopter.ogg')
+    // const path2 = require('@/assets/sound/kopter_up.ogg')
+    // const cannonPath = require('@/assets/sound/cannon.ogg')
+    // sounds.kopter = new Sound(path2, true, false, 0.3)
+    // sounds.kopter_idle = new Sound(path1, true, false, 0.2)
+    // sounds.cannon = new Sound(cannonPath, false, false, 0.4)
 
-  // window.addEventListener('focus', () => sounds.kopter_idle.play())
-  // window.addEventListener('load', () => sounds.kopter_idle.play())
-  // window.addEventListener('blur', () => sounds.kopter_idle.pause())
+    // window.addEventListener('focus', () => sounds.kopter_idle.play())
+    // window.addEventListener('load', () => sounds.kopter_idle.play())
+    // window.addEventListener('blur', () => sounds.kopter_idle.pause())
 
-  const rand = Math.random() * 100
-  for (const entity of platforms) {
-    if (entity.texture) {
-      drawPlatform(entity, ctx)
-    } else {
-      drawEntity(entity, ctx)
+    const rand = Math.random() * 100
+    for (const entity of platforms) {
+      if (entity.texture) {
+        drawPlatform(entity, ctx)
+      } else {
+        drawEntity(entity, ctx)
+      }
     }
+    drawFuel(ctx)
+    for (const bullet of bullets) {
+      drawEntity(bullet, ctx)
+    }
+    updateGameArea(ctx)
   }
-  drawFuel(ctx)
-  for (const bullet of bullets) {
-    drawEntity(bullet, ctx)
-  }
-  updateGameArea(ctx)
 }
 
 onMounted(() => {
-  // Device screen size
-  canvas.value.style.width = window.innerWidth + 'px'
-  // canvas.value.style.width = window.innerHeight + 'px'
-  canvas.value.style.height = window.innerHeight + 'px'
-
   // Below is the screensize to use, it includes DPS so that things do not blur
   const scale = window.devicePixelRatio
   scaledValues.canvasWidth = window.innerWidth * scale
   // canvasWidth = window.innerHeight * scale
   scaledValues.canvasHeight = window.innerHeight * scale
 
-  canvas.value.width = scaledValues.canvasWidth
-  canvas.value.height = scaledValues.canvasHeight
-
+  if (canvas.value) {
+    // Device screen size
+    canvas.value.style.width = window.innerWidth + 'px'
+    // canvas.value.style.width = window.innerHeight + 'px'
+    canvas.value.style.height = window.innerHeight + 'px'
+    canvas.value.width = scaledValues.canvasWidth
+    canvas.value.height = scaledValues.canvasHeight
+  }
   init()
 })
 
@@ -258,14 +261,14 @@ function createBullets(turret: ITurret) {
 }
 
 function update(ctx: CanvasRenderingContext2D) {
-  const grd = ctx.createLinearGradient(0, canvas.value.height, 0, 0)
+  const grd = ctx.createLinearGradient(0, getCanvasHeight(), 0, 0)
   grd.addColorStop(0, '#d47d48')
   grd.addColorStop(0.3, '#ddd')
   grd.addColorStop(1, '#7e94ae')
 
   // Fill with gradient
   ctx.fillStyle = grd
-  ctx.fillRect(0, 0, canvas.value.width, canvas.value.height)
+  ctx.fillRect(0, 0, getCanvasWidth(), getCanvasHeight())
 
   drawKopter(ctx)
   for (const entity of platforms) {
@@ -369,8 +372,16 @@ function handlePlayPaused() {
   paused = !paused
 }
 
+function getCanvasHeight() {
+  return canvas.value ? canvas.value.height : 0
+}
+
+function getCanvasWidth() {
+  return canvas.value ? canvas.value.width : 0
+}
+
 function hitBoundaries() {
-  const rockbottom = canvas.value.height - kopterAttributes.height
+  const rockbottom = getCanvasHeight() - kopterAttributes.height
 
   let onSurface: boolean = false
   // stop if hit bottom or platform surface
@@ -424,7 +435,7 @@ function hitBoundaries() {
     }
   }
   // stop if hit right side walls
-  if (curX + kopterAttributes.width > canvas.value.width) {
+  if (canvas.value && curX + kopterAttributes.width > getCanvasWidth()) {
     if (xSpeed < bounceSpeedThreshold) {
       xSpeed = -xSpeed
       gravityX = -gravityX
