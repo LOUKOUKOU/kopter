@@ -1,15 +1,15 @@
-import Vue from 'vue';
-import App from './App.vue';
-import Vue2TouchEvents from 'vue2-touch-events'
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+import Vue3TouchEvents, { type Vue3TouchEventsOptions } from 'vue3-touch-events'
 
-Vue.config.productionTip = false;
-Vue.use(Vue2TouchEvents, {
-    disableClick: false,
-    touchClass: '',
-    tapTolerance: 0,
-    touchHoldTolerance: 400,
-    swipeTolerance: 30,
-    longTapTimeInterval: 400
+const app = createApp(App)
+
+app.use<Vue3TouchEventsOptions>(Vue3TouchEvents, {
+  disableClick: false,
+  // any other global options...
 })
 
-new Vue({ render: (h) => h(App) }).$mount('#app');
+app.use(router)
+
+app.mount('#app')

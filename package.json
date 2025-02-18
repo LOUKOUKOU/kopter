@@ -1,37 +1,40 @@
 {
-  "name": "Kopter",
-  "version": "0.1.0",
+  "name": "kopter",
+  "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
-    "lint-fix": "vue-cli-service lint --fix"
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build",
+    "lint": "eslint . --fix",
+    "format": "prettier --write src/"
   },
   "dependencies": {
-    "@types/howler": "^2.1.2",
-    "core-js": "^3.1.2",
-    "gsap": "^2.1.3",
-    "howler": "^2.2.0",
-    "register-service-worker": "^1.7.1",
-    "vue": "^2.6.10",
-    "vue-class-component": "^7.0.2",
-    "vue-property-decorator": "^8.1.0",
-    "vue-router": "^3.0.6",
-    "vue2-touch-events": "^2.2.1",
-    "vuex": "^3.0.1"
+    "howler": "^2.2.4",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0",
+    "vue3-touch-events": "^5.0.13"
   },
   "devDependencies": {
-    "@types/gsap": "^1.20.2",
-    "@vue/cli-plugin-babel": "^4.0.0",
-    "@vue/cli-plugin-pwa": "~4.2.0",
-    "@vue/cli-plugin-typescript": "^4.0.0",
-    "@vue/cli-service": "^4.0.0",
-    "node-sass": "^4.13.1",
-    "sass-loader": "^8.0.0",
-    "style-loader": "^1.0.1",
-    "typescript": "~3.5.3",
-    "vue-template-compiler": "^2.6.10",
-    "vuescroll": "^4.14.4"
+    "@tsconfig/node22": "^22.0.0",
+    "@types/node": "^22.13.4",
+    "@types/vue": "^2.0.0",
+    "@types/vue-router": "^2.0.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.4.0",
+    "@vue/tsconfig": "^0.7.0",
+    "eslint": "^9.20.1",
+    "eslint-plugin-vue": "^9.32.0",
+    "jiti": "^2.4.2",
+    "npm-run-all2": "^7.0.2",
+    "prettier": "^3.5.1",
+    "typescript": "~5.7.3",
+    "vite": "^6.1.0",
+    "vite-plugin-vue-devtools": "^7.7.2",
+    "vue-tsc": "^2.2.2"
   }
 }
